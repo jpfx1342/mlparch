@@ -231,7 +231,13 @@ public class MLPArch {
 				//parse it
 				fieldPath = field;
 				
-				index.add(new MLPFileEntry(fieldStartOffset, fieldEndOffset, fieldMagic0, fieldMagic1, fieldPath));
+				//if (fieldStartOffset != fieldMagic1)
+				//	printlnout("startOffset/magic2 field mismatch? "+index.size()+": "+fieldStartOffset+" != "+fieldMagic1);
+				
+				MLPFileEntry entry = new MLPFileEntry(fieldStartOffset, fieldEndOffset, fieldMagic0, fieldMagic1, fieldPath);
+				//printlnout(""+entry.size()+" / "+entry.magic0+" = "+((float)entry.size()/entry.magic0));
+				index.add(entry);
+				
 				if (eof) break;
 			}
 		} catch (IOException ex) {
