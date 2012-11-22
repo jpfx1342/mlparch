@@ -29,7 +29,8 @@ public class XMLP_CLI {
 		System.out.println("    -p - apply a patch file (default)");
 		System.out.println("    -q <arg> - do an XPath query");
 		System.out.println("    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
-		System.out.println("    -p <arg> - set root directory for patch files (default \"extract\")");
+		System.out.println("    -r <arg> - set root directory for patch operation (default \"extract\")");
+		System.out.println("    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
 		System.out.println("    -v - show this help");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
@@ -37,6 +38,7 @@ public class XMLP_CLI {
 	public static void main(String[] args) throws Exception {
 		String targName = "xmlpatch.xml";
 		String pdirName = "extract";
+		String outdName = null;
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
 		
@@ -81,12 +83,19 @@ public class XMLP_CLI {
 								throw new IllegalArgumentException("Expected another bare argument after 't'!");
 							targName = args[i];
 							break;
-						case 'f':
+						case 'r':
 							if (j!=arg0.length()-1)
 								throw new IllegalArgumentException("'f' short option must be last in a stack!");
 							if (++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
 							pdirName = args[i];
+							break;
+						case 'o':
+							if (j!=arg0.length()-1)
+								throw new IllegalArgumentException("'o' short option must be last in a stack!");
+							if (++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 'o'!");
+							outdName = args[i];
 							break;
 						default:
 							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
@@ -97,21 +106,26 @@ public class XMLP_CLI {
 				throw new IllegalArgumentException("Unrecognized bare argument: '"+arg0+"'.");
 			}
 		}
+		if (outdName == null) outdName = pdirName;
 		File targFile = new File(targName);
 		File pdirFile = new File(pdirName);
+		File outdFile = new File(outdName);
 		
 		if (mode == 0) {
 			//patch mode
-			System.out.println("Reading patch file \""+targName+"\"...");
+			System.out.println("Applying patch file \""+targName+"\" to \""+pdirName+"\"...");
 				XMLPatch patcher = new XMLPatch();
 				patcher.applyPatch(targFile, pdirFile);
+			System.out.println("Writing patched documents to \""+outdName+"\"...");
+				outdFile.mkdirs();
+				patcher.writeDocMap(outdFile);
 		} else {
 			//query mode	
 			System.out.println("Querying \""+query+"\" from \""+targName+"\"...");
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
 				XMLPatch patcher = new XMLPatch();
-				patcher.applyOp(patcher.getDoc(targName), query, null, new XMLPatch.XMLPatchOpPrint());
+				patcher.applyOp(patcher.getDoc(null, targName), query, null, new XMLPatch.XMLPatchOpPrint());
 		}
 	}
 }

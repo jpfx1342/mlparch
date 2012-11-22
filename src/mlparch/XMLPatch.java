@@ -7,12 +7,21 @@ package mlparch;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -46,10 +55,10 @@ public class XMLPatch {
 		xpfactory = XPathFactory.newInstance();
 		addDefaultOps();
 	}
-	public Document getDoc(String target) throws FileNotFoundException, SAXException, IOException {
+	public Document getDoc(File root, String target) throws FileNotFoundException, SAXException, IOException {
 		Document doc = docMap.get(target);
 		if (doc == null) {
-			File file = new File(target);
+			File file = new File(root==null?new File("."):root, target);
 			if (!file.exists() || !file.isFile())
 				throw new RuntimeException("Couldn't locate target! (\""+file.getPath()+"\")");
 			doc = docBuilder.parse(new FileInputStream(file));
@@ -65,7 +74,11 @@ public class XMLPatch {
 	public void applyOp(Document doc, NodeList nodes, Node config, XMLPatchOp op) throws XPathExpressionException {
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
-			op.apply(config, node);
+			try {
+				op.apply(config, node);
+			} catch (Throwable t) {
+				System.err.println("Exception applying op on "+node+": "+t.getLocalizedMessage());
+			}
 		}
 	}
 	public void applyOp(Document doc, String query, Node config, XMLPatchOp op) throws XPathExpressionException {
@@ -100,7 +113,7 @@ public class XMLPatch {
 
 				System.out.println("Patching \""+p_target+"\":\""+p_query+"\"...");
 
-				Document doc = getDoc(new File(rootDir, p_target).getPath());
+				Document doc = getDoc(rootDir, p_target);
 
 				NodeList nodes = getNodes(doc, p_query);
 				for (Node n_xmlp_patch_op = n_xmlp_patch.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
@@ -125,6 +138,24 @@ public class XMLPatch {
 			}
 		}
 	}
+	public void writeDocMap(File outDir) throws Exception {
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+
+		for (Iterator<Entry<String, Document>> iter = docMap.entrySet().iterator(); iter.hasNext();) {
+			Entry i = iter.next();
+			String path = (String)i.getKey();
+			Document doc = (Document)i.getValue();
+			
+			//initialize StreamResult with File object to save to file
+			File outFile = new File(outDir, path);
+			System.out.println("Writing \""+path+"\"...");
+			
+			StreamResult result = new StreamResult(new FileWriter(outFile));
+			DOMSource source = new DOMSource(doc);
+			transformer.transform(source, result);
+		}
+	} 
 	public static String getNameFromType(short type) {
 		switch (type) {
 			case Node.ELEMENT_NODE:                return "ELEMENT_NODE";
@@ -153,6 +184,17 @@ public class XMLPatch {
 	public static class XMLPatchOpPrint implements XMLPatchOp {
 		@Override public void apply(Node config, Node target) {
 			System.out.println(target.toString());
+		}
+	}
+	public static class XMLPatchOpSet implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			NamedNodeMap attr = config.getAttributes();
+			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
+			Node a_value = attr.getNamedItem("value");
+			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			String value = a_value.getNodeValue();
+			
+			target.setNodeValue(value);
 		}
 	}
 }
