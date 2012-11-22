@@ -5,4 +5,10 @@
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/@ID" >
 		<op id="print"/>
 	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@ConstructionTime" >
+		<!--<op id="/=" value="10"/>-->
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.0666666666667"/> <!-- round up to nearest 15 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
 </xmlp>

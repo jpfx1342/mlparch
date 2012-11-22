@@ -52,8 +52,9 @@ public class XMLPatch {
 		opList.put("*=", new XMLPatchOpMulSet());
 		opList.put("/=", new XMLPatchOpDivSet());
 		opList.put("floor", new XMLPatchOpFloor());
-		opList.put("ciel", new XMLPatchOpCeil());
-		
+		opList.put("ceil", new XMLPatchOpCeil());
+		opList.put("round", new XMLPatchOpRound());
+		opList.put("sqrt", new XMLPatchOpSqrt());
 	}
 		
 	public XMLPatch() throws Exception {
@@ -202,7 +203,9 @@ public class XMLPatch {
 			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
 			String value = a_value.getNodeValue();
 			
+			String org = target.getNodeValue();
 			target.setNodeValue(value);
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpAddSet implements XMLPatchOp {
@@ -213,7 +216,9 @@ public class XMLPatch {
 			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(a_value.getNodeValue());
 			
-			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())+value));
+			double org = Double.parseDouble(target.getNodeValue());
+			target.setNodeValue(Double.toString(org+value));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpSubSet implements XMLPatchOp {
@@ -224,7 +229,9 @@ public class XMLPatch {
 			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(a_value.getNodeValue());
 			
-			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())-value));
+			double org = Double.parseDouble(target.getNodeValue());
+			target.setNodeValue(Double.toString(org-value));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpMulSet implements XMLPatchOp {
@@ -235,7 +242,9 @@ public class XMLPatch {
 			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(a_value.getNodeValue());
 			
-			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())*value));
+			double org = Double.parseDouble(target.getNodeValue());
+			target.setNodeValue(Double.toString(org*value));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpDivSet implements XMLPatchOp {
@@ -246,17 +255,85 @@ public class XMLPatch {
 			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(a_value.getNodeValue());
 			
-			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())/value));
+			double org = Double.parseDouble(target.getNodeValue());
+			target.setNodeValue(Double.toString(org/value));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpFloor implements XMLPatchOp {
 		@Override public void apply(Node config, Node target) {
-			target.setNodeValue(Integer.toString((int)Math.floor(Double.parseDouble(target.getNodeValue()))));
+			double sig = 0;
+			boolean direct = false;
+			NamedNodeMap attr = config.getAttributes();
+			if (attr != null) {
+				Node a_value = attr.getNamedItem("direct");
+				if (a_value != null)
+					direct = Boolean.parseBoolean(a_value.getNodeValue());
+				a_value = attr.getNamedItem("sig");
+				if (a_value != null)
+					sig = Double.parseDouble(a_value.getNodeValue());
+			}
+			double pow = direct ? sig : Math.pow(10, sig);
+			
+			double org = Double.parseDouble(target.getNodeValue());
+			if (pow == 0)
+				target.setNodeValue(Integer.toString((int)Math.floor(org)));
+			else
+				target.setNodeValue(Double.toString(Math.floor(org*pow)/pow));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpCeil implements XMLPatchOp {
 		@Override public void apply(Node config, Node target) {
-			target.setNodeValue(Integer.toString((int)Math.ceil(Double.parseDouble(target.getNodeValue()))));
+			double sig = 0;
+			boolean direct = false;
+			NamedNodeMap attr = config.getAttributes();
+			if (attr != null) {
+				Node a_value = attr.getNamedItem("direct");
+				if (a_value != null)
+					direct = Boolean.parseBoolean(a_value.getNodeValue());
+				a_value = attr.getNamedItem("sig");
+				if (a_value != null)
+					sig = Double.parseDouble(a_value.getNodeValue());
+			}
+			double pow = direct ? sig : Math.pow(10, sig);
+			
+			double org = Double.parseDouble(target.getNodeValue());
+			if (pow == 0)
+				target.setNodeValue(Integer.toString((int)Math.ceil(org)));
+			else
+				target.setNodeValue(Double.toString(Math.ceil(org*pow)/pow));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+		}
+	}
+	public static class XMLPatchOpRound implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			double sig = 0;
+			boolean direct = false;
+			NamedNodeMap attr = config.getAttributes();
+			if (attr != null) {
+				Node a_value = attr.getNamedItem("direct");
+				if (a_value != null)
+					direct = Boolean.parseBoolean(a_value.getNodeValue());
+				a_value = attr.getNamedItem("sig");
+				if (a_value != null)
+					sig = Double.parseDouble(a_value.getNodeValue());
+			}
+			double pow = direct ? sig : Math.pow(10, sig);
+			
+			double org = Double.parseDouble(target.getNodeValue());
+			if (pow == 0)
+				target.setNodeValue(Integer.toString((int)Math.round(org)));
+			else
+				target.setNodeValue(Double.toString(Math.round(org*pow)/pow));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+		}
+	}
+	public static class XMLPatchOpSqrt implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			double org = Double.parseDouble(target.getNodeValue());
+			target.setNodeValue(Double.toString(Math.sqrt(org)));
+			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	
