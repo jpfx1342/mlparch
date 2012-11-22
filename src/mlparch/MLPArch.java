@@ -97,7 +97,7 @@ public class MLPArch {
 	public char compatNewLineChar = 0x0A; //LF
 	public char compatFieldChar = 0x20; //Space
 	public int compatMaxLineLength = 1024;
-	public int compatWriteBufferSize = 1024*8;
+	public int compatWriteBufferSize = 1024*16;
 	/** Allow files to be extracted even if their path would put them outside
 	 * the destination directory. Only set this to true if you know what you're
 	 * doing, as a malicious archive could unpack files anywhere on your system. **/
