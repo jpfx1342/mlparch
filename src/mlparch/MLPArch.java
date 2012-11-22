@@ -126,13 +126,14 @@ public class MLPArch {
 			archRead = new RandomAccessFile(archFile, "r");
 	}
 	public void prepareWrite() throws FileNotFoundException {
-		if (archFile.exists())
-			if (archFile.isFile())
-				archFile.delete();
-			else if (archFile.isDirectory())
-				throw new FileNotFoundException("Target Archive for writing was a directory!");
-		if (archWrite == null)
+		if (archWrite == null) {
+			if (archFile.exists())
+				if (archFile.isFile())
+					archFile.delete();
+				else if (archFile.isDirectory())
+					throw new FileNotFoundException("Target Archive for writing was a directory!");
 			archWrite = new RandomAccessFile(archFile, "rw");
+		}
 	}
 	
 	/** This method attempts to load the header from the archive. **/
