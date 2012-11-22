@@ -4,6 +4,13 @@
  */
 package mlparch;
 
+import java.text.ParseException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+
 /**
  *
  * @author john
@@ -82,10 +89,33 @@ public class XMLP_CLI {
 		
 		if (mode == 0) {
 			//patch mode
-			throw new UnsupportedOperationException();
+			System.out.println("Reading patch file \""+targName+"\"...");
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document patchDoc = builder.parse(targName);
+			Node n_xmlp = patchDoc.getFirstChild();
+			if (!n_xmlp.getNodeName().equals("xmlp"))
+				throw new RuntimeException("Root patch node must be named \"xmlp\""); 
+			
+			for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
+				NamedNodeMap attr = n_xmlp_patch.getAttributes();
+				
+				//get query...
+				Node n = attr.getNamedItem("query");
+				if (n == null) { System.err.println("Patch has no query!"); continue; }
+				String p_query = n.getNodeValue();
+				
+				//get op...
+				n = attr.getNamedItem("op");
+				if (n == null) { System.err.println("Patch has no op!"); continue; }
+				String p_op = n.getNodeValue();
+				
+				System.err.println("Performing \""+p_op+"\" on \""+p_query+"\"");
+				
+			}
 		} else {
 			//query mode	
-			System.out.println("Querying \""+targName+"\"...");
+			System.out.println("Querying \""+query+"\" from \""+targName+"\"...");
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
 				XMLPatch patcher = new XMLPatch(targName);
