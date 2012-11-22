@@ -48,11 +48,10 @@ public class XMLP_CLI {
 						case '?':
 							showHelp(); System.exit(0);
 						case 'q':
-							case 'a':
 							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'a' short option must be last in a stack!");
+								throw new IllegalArgumentException("'q' short option must be last in a stack!");
 							if (++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'a'!");
+								throw new IllegalArgumentException("Expected another bare argument after 'q'!");
 							query = args[i];
 							break;
 						default:
