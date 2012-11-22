@@ -100,8 +100,13 @@ public class XMLP_CLI {
 			for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
 				NamedNodeMap attr = n_xmlp_patch.getAttributes();
 				
+				//get target...
+				Node n = attr.getNamedItem("target");
+				if (n == null) { System.err.println("Patch has no target!"); continue; }
+				String p_target = n.getNodeValue();
+				
 				//get query...
-				Node n = attr.getNamedItem("query");
+				n = attr.getNamedItem("query");
 				if (n == null) { System.err.println("Patch has no query!"); continue; }
 				String p_query = n.getNodeValue();
 				
@@ -110,7 +115,7 @@ public class XMLP_CLI {
 				if (n == null) { System.err.println("Patch has no op!"); continue; }
 				String p_op = n.getNodeValue();
 				
-				System.err.println("Performing \""+p_op+"\" on \""+p_query+"\"");
+				System.err.println("Performing \""+p_op+"\" on \""+p_target+"\":\""+p_query+"\"");
 				
 			}
 		} else {
