@@ -16,3 +16,4 @@ Phlogiston.jar
 #Ignore game data and program output
 /*.obb
 /extract/
+/out/
