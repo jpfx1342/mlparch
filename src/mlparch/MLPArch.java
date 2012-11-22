@@ -60,8 +60,8 @@ public class MLPArch {
 	/** The file location backing this archive. This is the file we will read and
 	 * write from when loading/saving the archive. **/
 	public File archFile;
-	public RandomAccessFile archAcc;
-	
+	public RandomAccessFile archRead;
+	public RandomAccessFile archWrite;
 	
 	public Charset indexCharset;
 	{
@@ -121,14 +121,23 @@ public class MLPArch {
 		return false;
 	}
 	
-	public void prepareAccess() throws FileNotFoundException {
-		if (archAcc == null)
-			archAcc = new RandomAccessFile(archFile, readonly?"r":"rw");
+	public void prepareRead() throws FileNotFoundException {
+		if (archRead == null)
+			archRead = new RandomAccessFile(archFile, "r");
+	}
+	public void prepareWrite() throws FileNotFoundException {
+		if (archFile.exists())
+			if (archFile.isFile())
+				archFile.delete();
+			else if (archFile.isDirectory())
+				throw new FileNotFoundException("Target Archive for writing was a directory!");
+		if (archWrite == null)
+			archWrite = new RandomAccessFile(archFile, "rw");
 	}
 	
 	/** This method attempts to load the header from the archive. **/
 	public void loadHeaderFromArchive() throws FileNotFoundException, IOException {
-		prepareAccess();
+		prepareRead();
 		//The MLP archive header is really, stupidly simple. It's a series of
 		//plain-text decimal digits, which indicate the starting position of the index.
 		//It is unknown whether this is can be a variable length, but all Gameloft
@@ -137,7 +146,7 @@ public class MLPArch {
 			//we're reading as a fixed header.
 			//read the header
 			byte[] data = new byte[compatFixedHeaderSize];
-			archAcc.read(data);
+			archRead.read(data);
 			
 			//trim the header (easy because it's fixed length)
 			String number = new String(data, Charset.forName("UTF8"));
@@ -149,7 +158,7 @@ public class MLPArch {
 			//basically the same thing, except we read 32 bytes, and search that
 			//string for our number
 			byte[] data = new byte[32];
-			archAcc.read(data);
+			archRead.read(data);
 			
 			//trim the header
 			String number = new String(data, Charset.forName("UTF8"));
@@ -164,7 +173,7 @@ public class MLPArch {
 		}
 	}
 	public void loadIndexFromArchive() throws FileNotFoundException {
-		prepareAccess();
+		prepareRead();
 		
 		//The index is a series of file entries, separated by newlines.
 		//There is no file count, so you just have to keep reading until you
@@ -174,7 +183,7 @@ public class MLPArch {
 		byte[] line = new byte[compatMaxLineLength];
 		try {
 			//first seek to the index
-			archAcc.seek(indexOffset);
+			archRead.seek(indexOffset);
 			
 			while (true) {
 				//System.out.println("Reading index "+index.size()+" at "+archAcc.getFilePointer()+"/"+archAcc.length());
@@ -196,7 +205,7 @@ public class MLPArch {
 				int pos0 = 0;
 				while (true) {
 					try {
-						byte b = archAcc.readByte();
+						byte b = archRead.readByte();
 						if (b == compatNewLineChar)
 							break;
 						line[pos0++] = b;
@@ -298,8 +307,8 @@ public class MLPArch {
 		indexOffset = pos;
 	}
 	/** Extracts a single file from the archive. **/
-	public void extractFile(MLPFileEntry entry, File destFolder) throws FileNotFoundException, IOException {
-		prepareAccess();
+	public void unpackFile(MLPFileEntry entry, File destFolder) throws FileNotFoundException, IOException {
+		prepareRead();
 		
 		File destFile = new File(destFolder, entry.path);
 		if (!compatFullPaths && !isAncestorOf(destFile, destFolder)) {
@@ -310,26 +319,31 @@ public class MLPArch {
 		
 		OutputStream os = new FileOutputStream(destFile);
 		//for all the data...
-		archAcc.seek(entry.startOffset);
+		archRead.seek(entry.startOffset);
 		byte[] buffer = new byte[compatWriteBufferSize];
 		int pos = 0;
 		while (true) {
 			long rem = entry.size()-pos;
 			if (rem <= 0) break;
-			int read = archAcc.read(buffer, 0, rem < compatWriteBufferSize ? (int)rem : compatWriteBufferSize);
+			int read = archRead.read(buffer, 0, rem < compatWriteBufferSize ? (int)rem : compatWriteBufferSize);
 			if (read <= 0) break;
 			os.write(buffer, 0, read);
 			pos += read;
 		}
 		os.flush(); os.close();
 	}
-	public void extractArchive(File destFolder) throws FileNotFoundException, IOException {
+	public void unpackArchive(File destFolder) throws FileNotFoundException, IOException {
 		NumberFormat format = NumberFormat.getPercentInstance();
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
 			printout("Extracting "+i+"/"+index.size()+" ("+format.format((float)i/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
-				extractFile(entry, destFolder);
+				unpackFile(entry, destFolder);
 			printlnout("done.");
 		}
+	}
+	public void writeHeadertoArchive() throws FileNotFoundException, IOException {
+		prepareWrite();
+		
+		archWrite.seek(0);
 	}
 }
