@@ -139,12 +139,6 @@ public class MLPA_CLI {
 			System.out.println("Writing index...");
 				arch.writeIndexToArchive();
 		}
-			
-	//	System.out.println("Testing XMLPatch...");
-	//		String target = "extract/gameobjectdata.xml";
-	//		//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
-	//		String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
-	//		XMLPatch patcher = new XMLPatch(target);
-	//		patcher.applyPatch(query, new XMLPatch.PrintValueXMLActor());
+		
 	}
 }

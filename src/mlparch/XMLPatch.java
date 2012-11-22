@@ -69,4 +69,9 @@ public class XMLPatch {
 			System.out.println(node.getNodeName()+"("+getNameFromType(node.getNodeType())+") = "+node.getNodeValue());
 		}
 	}
+	public static class PrintXMLActor implements XMLActor {
+		@Override public void process(Node node) {
+			System.out.println(node.toString());
+		}
+	}
 }
