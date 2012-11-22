@@ -18,8 +18,9 @@ public class MLPA_CLI {
 		System.out.println("MLPArch packing/unpacking utility");
 		System.out.println("Public domain code, released 2012");
 		System.out.println("Options:");
-		System.out.println("    -p - pack mode");
 		System.out.println("    -u - unpack mode (default)");
+		System.out.println("    -p - pack mode");
+		System.out.println("    -l - list mode ");
 		System.out.println("    -a <arg> - specify archive location (default \"main.1050.com.gameloft.android.ANMP.GloftPOHM.obb\")");
 		System.out.println("    -f <arg> - specify pack/unpack location (default \"extract\")");
 		System.out.println("    -v - show this help");
