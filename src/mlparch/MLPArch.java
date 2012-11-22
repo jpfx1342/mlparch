@@ -342,7 +342,7 @@ public class MLPArch {
 		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-			printout("Extracting "+i+"/"+index.size()+" ("+format.format((float)i/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			printout("Extracting "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 				unpackFile(entry, destFolder);
 			printlnout("done.");
 		}
@@ -374,7 +374,7 @@ public class MLPArch {
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-			printout("Packing "+i+"/"+index.size()+" ("+format.format((float)i/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
 			File file = new File(packFolder, entry.path);
 			if (!file.exists() || file.isDirectory())

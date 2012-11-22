@@ -111,7 +111,7 @@ public class MLPA_CLI {
 				NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 				for (int i = 0; i < arch.index.size(); i++) {
 					MLPFileEntry entry = arch.index.get(i);
-					System.out.print("Unpacking "+(i+1)+"/"+arch.index.size()+" ("+format.format((float)i/arch.index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+					System.out.print("Unpacking "+(i+1)+"/"+arch.index.size()+" ("+format.format((float)(i+1)/arch.index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 						arch.unpackFile(entry, packFile);
 					System.out.println("done.");
 				}
