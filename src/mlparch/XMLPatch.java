@@ -276,7 +276,7 @@ public class XMLPatch {
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
-			if (pow == 0)
+			if (Math.abs(pow-1d)<0.00000001)
 				target.setNodeValue(Integer.toString((int)Math.floor(org)));
 			else
 				target.setNodeValue(Double.toString(Math.floor(org*pow)/pow));
@@ -299,7 +299,7 @@ public class XMLPatch {
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
-			if (pow == 0)
+			if (Math.abs(pow-1d)<0.00000001)
 				target.setNodeValue(Integer.toString((int)Math.ceil(org)));
 			else
 				target.setNodeValue(Double.toString(Math.ceil(org*pow)/pow));
@@ -322,7 +322,7 @@ public class XMLPatch {
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
-			if (pow == 0)
+			if (Math.abs(pow-1d)<0.00000001)
 				target.setNodeValue(Integer.toString((int)Math.round(org)));
 			else
 				target.setNodeValue(Double.toString(Math.round(org*pow)/pow));
