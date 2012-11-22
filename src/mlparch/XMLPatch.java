@@ -46,6 +46,14 @@ public class XMLPatch {
 	
 	public void addDefaultOps() {
 		opList.put("print", new XMLPatchOpPrint());
+		opList.put("=", new XMLPatchOpSet());
+		opList.put("+=", new XMLPatchOpAddSet());
+		opList.put("-=", new XMLPatchOpSubSet());
+		opList.put("*=", new XMLPatchOpMulSet());
+		opList.put("/=", new XMLPatchOpDivSet());
+		opList.put("floor", new XMLPatchOpFloor());
+		opList.put("ciel", new XMLPatchOpCeil());
+		
 	}
 		
 	public XMLPatch() throws Exception {
@@ -197,4 +205,59 @@ public class XMLPatch {
 			target.setNodeValue(value);
 		}
 	}
+	public static class XMLPatchOpAddSet implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			NamedNodeMap attr = config.getAttributes();
+			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
+			Node a_value = attr.getNamedItem("value");
+			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(a_value.getNodeValue());
+			
+			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())+value));
+		}
+	}
+	public static class XMLPatchOpSubSet implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			NamedNodeMap attr = config.getAttributes();
+			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
+			Node a_value = attr.getNamedItem("value");
+			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(a_value.getNodeValue());
+			
+			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())-value));
+		}
+	}
+	public static class XMLPatchOpMulSet implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			NamedNodeMap attr = config.getAttributes();
+			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
+			Node a_value = attr.getNamedItem("value");
+			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(a_value.getNodeValue());
+			
+			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())*value));
+		}
+	}
+	public static class XMLPatchOpDivSet implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			NamedNodeMap attr = config.getAttributes();
+			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
+			Node a_value = attr.getNamedItem("value");
+			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(a_value.getNodeValue());
+			
+			target.setNodeValue(Double.toString(Double.parseDouble(target.getNodeValue())/value));
+		}
+	}
+	public static class XMLPatchOpFloor implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			target.setNodeValue(Integer.toString((int)Math.floor(Double.parseDouble(target.getNodeValue()))));
+		}
+	}
+	public static class XMLPatchOpCeil implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
+			target.setNodeValue(Integer.toString((int)Math.ceil(Double.parseDouble(target.getNodeValue()))));
+		}
+	}
+	
 }
