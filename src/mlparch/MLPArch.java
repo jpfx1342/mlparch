@@ -348,7 +348,7 @@ public class MLPArch {
 			printlnout("done.");
 		}
 	}
-	public void writeHeadertoArchive() throws FileNotFoundException, IOException {
+	public void writeHeaderToArchive() throws FileNotFoundException, IOException {
 		prepareWrite();
 		
 		int headerLength = compatFixedHeaderSize > 0 ? compatFixedHeaderSize : 32; //header length
@@ -369,12 +369,14 @@ public class MLPArch {
 		archWrite.setLength(indexOffset);
 		
 		int pos = compatFixedHeaderSize > 0 ? compatFixedHeaderSize : 32; //header length
+		archWrite.seek(pos);
 		
 		byte[] buffer = new byte[compatWriteBufferSize];
 		
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
+		//	if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
 			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
 			File file = new File(packFolder, entry.path);
@@ -400,5 +402,8 @@ public class MLPArch {
 		}
 		if (pos != indexOffset)
 			throw new IllegalStateException("End of write doesn't meet index position!");
+	}
+	public void writeIndexToArchive() throws FileNotFoundException, IOException {
+		prepareWrite();
 	}
 }

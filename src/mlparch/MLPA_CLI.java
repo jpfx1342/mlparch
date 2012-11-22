@@ -129,9 +129,14 @@ public class MLPA_CLI {
 			System.out.println("done.");
 			System.out.println("\tFile Count: "+arch.index.size());
 			
+			System.out.println("Writing header...");
+				arch.writeHeaderToArchive();
+			
 			System.out.println("Packing files...");
 				arch.writeFilesToArchive(packFile);
 			
+			System.out.println("Writing index...");
+				arch.writeIndexToArchive();
 		}
 			
 	//	System.out.println("Testing XMLPatch...");
