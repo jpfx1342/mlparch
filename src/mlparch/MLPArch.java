@@ -339,7 +339,7 @@ public class MLPArch {
 		os.flush(); os.close();
 	}
 	public void unpackArchive(File destFolder) throws FileNotFoundException, IOException {
-		NumberFormat format = NumberFormat.getPercentInstance();
+		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
 			printout("Extracting "+i+"/"+index.size()+" ("+format.format((float)i/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
@@ -362,6 +362,7 @@ public class MLPArch {
 	}
 	public void writeFilesToArchive(File packFolder) throws FileNotFoundException, IOException {
 		prepareWrite();
+		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		
 		//preallocate file space
 		archWrite.setLength(indexOffset);
@@ -373,11 +374,14 @@ public class MLPArch {
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
+			printout("Packing "+i+"/"+index.size()+" ("+format.format((float)i/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			
 			File file = new File(packFolder, entry.path);
 			if (!file.exists() || file.isDirectory())
 				throw new IllegalStateException("Misplaced file: "+entry.path);
 			if (file.length() != entry.size())
 				throw new IllegalStateException("File size changed: "+entry.path);
+			
 			
 			//okay should be good now.
 			int rpos = 0;
