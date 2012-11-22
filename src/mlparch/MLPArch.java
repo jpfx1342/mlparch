@@ -20,6 +20,8 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * This object represents an MLPFS, as used by the My Little Pony game by 
@@ -261,6 +263,33 @@ public class MLPArch {
 			}
 		} catch (IOException ex) {
 			//we reached the end of file. probably.
+		}
+	}
+	private void traverseAndAddToArray(File folder, ArrayList<File> files) {
+		File[] children = folder.listFiles();
+		Arrays.sort(children, new Comparator<File>() {
+			@Override public int compare(File f1, File f2) {
+				return f1.compareTo(archFile);
+			}
+		});
+		for (int i = 0; i < children.length; i++) {
+			if (children[i].isDirectory()) {
+				traverseAndAddToArray(folder, files);
+			} else if (children[i].isFile()) {
+				files.add(children[i]);
+			}
+		}
+	}
+	public void loadIndexFromFolder(File packFolder) {
+		
+		//build the index from that folder
+		ArrayList<File> files = new ArrayList<File>(8192);
+		traverseAndAddToArray(packFolder, files);
+		
+		index = new ArrayList<MLPFileEntry>();
+		for (int i = 0; i < files.size(); i++) {
+			MLPFileEntry entry = new MLPFileEntry(-1, -1, 0, -1, files.get(i).getPath());
+			index.add(entry);
 		}
 	}
 	/** Extracts a single file from the archive. **/

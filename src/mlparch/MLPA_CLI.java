@@ -122,6 +122,12 @@ public class MLPA_CLI {
 			}
 		} else if (mode == 1) {
 			//pack
+			System.out.println("Packing MLPArch at \""+archFile.getPath()+"\" from \""+packFile.getPath()+"\".");
+			
+			System.out.print("Building index...");
+				arch.loadIndexFromFolder(packFile);
+			System.out.println("done.");
+			System.out.println("\tFile Count: "+arch.index.size());
 			
 		}
 			
