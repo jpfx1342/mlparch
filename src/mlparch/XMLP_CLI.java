@@ -106,21 +106,27 @@ public class XMLP_CLI {
 				if (n_xmlp_patch.getNodeName().equals("patch")) {
 					NamedNodeMap attr = n_xmlp_patch.getAttributes();
 
+					Node n = null;
+					String p_target = null;
+					String p_query = null;
+					String p_op = null;
+					
 					//get target...
-					Node n = attr.getNamedItem("target");
-					if (n == null) { System.err.println("Patch has no target!"); continue; }
-					String p_target = n.getNodeValue();
-
+					n = attr.getNamedItem("target");
+					if (n != null) p_target = n.getNodeValue();
+					
 					//get query...
 					n = attr.getNamedItem("query");
-					if (n == null) { System.err.println("Patch has no query!"); continue; }
-					String p_query = n.getNodeValue();
+					if (n != null) p_query = n.getNodeValue();
 
 					//get op...
 					n = attr.getNamedItem("op");
-					if (n == null) { System.err.println("Patch has no op!"); continue; }
-					String p_op = n.getNodeValue();
-
+					if (n != null) p_op = n.getNodeValue();
+					
+					if (p_target == null) { System.err.println("Patch has no target!"); continue; }
+					if (p_query  == null) { System.err.println("Patch has no query!"); continue; }
+					if (p_op     == null) { System.err.println("Patch has no op!"); continue; }
+					
 					System.err.println("Performing \""+p_op+"\" on \""+p_target+"\":\""+p_query+"\"");
 				}
 			}
