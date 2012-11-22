@@ -4,12 +4,18 @@
  */
 package mlparch;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import mlparch.XMLPatch.XMLPatchOp;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -33,6 +39,12 @@ public class XMLP_CLI {
 		String pdirName = "extract";
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
+		Map<String, XMLPatchOp> opList = new HashMap<String, XMLPatchOp>();
+		opList.put("print", new XMLPatchOp() {
+			@Override public void apply(NamedNodeMap config, Node target) {
+				System.out.println(target.toString());
+			}
+		});
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -102,32 +114,58 @@ public class XMLP_CLI {
 			if (!n_xmlp.getNodeName().equals("xmlp"))
 				throw new RuntimeException("Root patch node must be named \"xmlp\""); 
 			
+			HashMap<String, XMLPatch> patMap = new HashMap<String, XMLPatch>();
+			DocumentBuilderFactory docFac = DocumentBuilderFactory.newInstance();
+			factory.setNamespaceAware(true);
+			DocumentBuilder docBuilder = docFac.newDocumentBuilder();
 			for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
 				if (n_xmlp_patch.getNodeName().equals("patch")) {
-					NamedNodeMap attr = n_xmlp_patch.getAttributes();
-
+					NamedNodeMap n_xmlp_patch_attr = n_xmlp_patch.getAttributes();
+					
 					Node n = null;
 					String p_target = null;
 					String p_query = null;
-					String p_op = null;
 					
 					//get target...
-					n = attr.getNamedItem("target");
+					n = n_xmlp_patch_attr.getNamedItem("target");
 					if (n != null) p_target = n.getNodeValue();
 					
 					//get query...
-					n = attr.getNamedItem("query");
+					n = n_xmlp_patch_attr.getNamedItem("query");
 					if (n != null) p_query = n.getNodeValue();
 
-					//get op...
-					n = attr.getNamedItem("op");
-					if (n != null) p_op = n.getNodeValue();
-					
 					if (p_target == null) { System.err.println("Patch has no target!"); continue; }
 					if (p_query  == null) { System.err.println("Patch has no query!"); continue; }
-					if (p_op     == null) { System.err.println("Patch has no op!"); continue; }
 					
-					System.err.println("Performing \""+p_op+"\" on \""+p_target+"\":\""+p_query+"\"");
+					XMLPatch pat = patMap.get(targName);
+					if (pat == null) {
+						File target = new File(pdirName, targName);
+						if (!target.exists() || !target.isFile())
+							throw new RuntimeException("Couldn't locate target!");
+						Document doc = docBuilder.parse(new FileInputStream(target));
+						pat = new XMLPatch(doc);
+						patMap.put(targName, pat);
+					}
+					
+					System.out.println("Patching \""+p_target+"\":\""+p_query+"\"...");
+					
+					NodeList nodes = pat.getNodes(p_query);
+					for (Node n_xmlp_patch_op = n_xmlp_patch.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
+						NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_op.getAttributes();
+						
+						String p_op = null;
+						
+						//get op...
+						n = n_xmlp_patch_op_attr.getNamedItem("id");
+						if (n != null) p_op = n.getNodeValue();
+
+						if (p_op == null) { System.err.println("Op has no id!"); continue; }
+						
+						XMLPatchOp op = opList.get(p_query);
+						if (op == null) { System.err.println("Unrecognized op!"); continue; }
+						
+						pat.applyPatch(nodes, n_xmlp_patch_op_attr, op);
+					}
 				}
 			}
 		} else {
@@ -136,7 +174,7 @@ public class XMLP_CLI {
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
 				XMLPatch patcher = new XMLPatch(targName);
-				patcher.applyPatch(query, new XMLPatch.PrintXMLActor());
+				patcher.applyPatch(query, null, new XMLPatch.PrintXMLActor());
 		}
 	}
 }

@@ -11,6 +11,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -20,7 +21,7 @@ import org.xml.sax.SAXException;
  * @author John Petska
  */
 public class XMLPatch {
-	private final Document doc;
+	public final Document doc;
 	private final XPathFactory xpfactory;
 	
 	public XMLPatch(String path) throws Exception {
@@ -30,19 +31,23 @@ public class XMLPatch {
 		doc = builder.parse(path);
 		xpfactory = XPathFactory.newInstance();
 	}
-	
+	public XMLPatch(Document doc) throws Exception {
+		this.doc = doc;
+		xpfactory = XPathFactory.newInstance();
+	}
 	public NodeList getNodes(String query) throws XPathExpressionException {
 		XPath xpath = xpfactory.newXPath();
 		NodeList nodes = (NodeList) xpath.evaluate(query, doc, XPathConstants.NODESET);
 		return nodes;
 	}
-	
-	public void applyPatch(String query, XMLActor actor) throws XPathExpressionException {
-		NodeList nodes = getNodes(query);
+	public void applyPatch(NodeList nodes, NamedNodeMap config, XMLPatchOp op) throws XPathExpressionException {
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
-			actor.process(node);
+			op.apply(config, node);
 		}
+	}
+	public void applyPatch(String query, NamedNodeMap config, XMLPatchOp op) throws XPathExpressionException {
+		applyPatch(getNodes(query), config, op);
 	}
 	public static String getNameFromType(short type) {
 		switch (type) {
@@ -61,17 +66,17 @@ public class XMLPatch {
 		}
 		return "UNKNOWN_NODE";
 	}
-	public static interface XMLActor {
-		public void process(Node node);
+	public static interface XMLPatchOp {
+		public void apply(NamedNodeMap config, Node target);
 	}
-	public static class PrintValueXMLActor implements XMLActor {
-		@Override public void process(Node node) {
-			System.out.println(node.getNodeName()+"("+getNameFromType(node.getNodeType())+") = "+node.getNodeValue());
+	public static class PrintValueXMLActor implements XMLPatchOp {
+		@Override public void apply(NamedNodeMap config, Node target) {
+			System.out.println(target.getNodeName()+"("+getNameFromType(target.getNodeType())+") = "+target.getNodeValue());
 		}
 	}
-	public static class PrintXMLActor implements XMLActor {
-		@Override public void process(Node node) {
-			System.out.println(node.toString());
+	public static class PrintXMLActor implements XMLPatchOp {
+		@Override public void apply(NamedNodeMap config, Node target) {
+			System.out.println(target.toString());
 		}
 	}
 }
