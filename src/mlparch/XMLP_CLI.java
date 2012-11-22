@@ -13,14 +13,16 @@ public class XMLP_CLI {
 		System.out.println("XMLPatch XML patching utility");
 		System.out.println("Public domain code, released 2012");
 		System.out.println("Options:");
+		System.out.println("    -q <arg> - do an XPath query");
 		System.out.println("    -t <arg> - set target file for patch or query");
+		System.out.println("    -p <arg> - set root directory for patch files");
 		System.out.println("    -v - show this help");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
 	}
 	public static void main(String[] args) throws Exception {
 		String targName = "xmlpatch.xml";
-		String packName = "extract";
+		String pdirName = "extract";
 		String query = null;
 		int mode = 1; //0 == patch, 1 == query
 		
@@ -53,6 +55,20 @@ public class XMLP_CLI {
 							if (++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'q'!");
 							query = args[i];
+							break;
+						case 't':
+							if (j!=arg0.length()-1)
+								throw new IllegalArgumentException("'t' short option must be last in a stack!");
+							if (++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 't'!");
+							targName = args[i];
+							break;
+						case 'f':
+							if (j!=arg0.length()-1)
+								throw new IllegalArgumentException("'f' short option must be last in a stack!");
+							if (++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
+							pdirName = args[i];
 							break;
 						default:
 							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
