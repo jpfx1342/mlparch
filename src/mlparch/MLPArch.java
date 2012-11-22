@@ -94,10 +94,29 @@ public class MLPArch {
 	public char compatFieldChar = 0x20; //Space
 	public int compatMaxLineLength = 1024;
 	public int compatWriteBufferSize = 1024;
+	/** Allow files to be extracted even if their path would put them outside
+	 * the destination directory. Only set this to true if you know what you're
+	 * doing, as a malicious archive could unpack files anywhere on your system. **/
+	public boolean compatFullPaths = false;
 	
 	/** This constructor simply sets the archive file. **/
 	public MLPArch(File archFile) {
 		this.archFile = archFile;
+	}
+	
+	public static boolean isAncestorOf(File subject, File ancestor) {
+		try {
+			File target = ancestor.getCanonicalFile();
+			File parent = subject.getCanonicalFile().getParentFile();
+			while (parent != null) {
+				if (parent.equals(target))
+					return true;
+				parent = parent.getParentFile();
+			}
+		} catch (IOException ex) {
+			System.err.println("Exception checking ancestry of "+subject+" (target: "+ancestor+"): "+ex.getLocalizedMessage());
+		}
+		return false;
 	}
 	
 	public void prepareAccess() throws FileNotFoundException {
@@ -249,6 +268,10 @@ public class MLPArch {
 		prepareAccess();
 		
 		File destFile = new File(destFolder, entry.path);
+		if (!compatFullPaths && !isAncestorOf(destFile, destFolder)) {
+			printlnerr("Warning: \""+destFile.getPath()+"\" is not an ancestor of \""+destFolder+"\"! Skipping.");
+			return;
+		}
 		destFile.getParentFile().mkdirs();
 		
 		OutputStream os = new FileOutputStream(destFile);
