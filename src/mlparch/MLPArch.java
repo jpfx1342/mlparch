@@ -395,6 +395,7 @@ public class MLPArch {
 				rpos += read;
 			}
 			pos += entry.size();
+			printlnout("done.");
 		}
 	}
 }
