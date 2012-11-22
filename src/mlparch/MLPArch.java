@@ -274,25 +274,25 @@ public class MLPArch {
 			//we reached the end of file. probably.
 		}
 	}
-	private void traverseAndAddToArray(File folder, ArrayList<File> files, boolean first) {
+	private void traverseAndAddToArray(File folder, ArrayList<File> files) {
 		File[] children = folder.listFiles();
 		Arrays.sort(children, new Comparator<File>() {
 			@Override public int compare(File f1, File f2) {
-				return f1.compareTo(archFile);
+				return f1.getName().compareTo(f2.getName());
 			}
 		});
 		for (int i = 0; i < children.length; i++) {
 			if (children[i].isDirectory()) {
-				traverseAndAddToArray(children[i], files, false);
+				traverseAndAddToArray(children[i], files);
 			} else if (children[i].isFile()) {
-				files.add(first ? new File(children[i].getName()) : children[i]);
+				files.add(children[i]);
 			}
 		}
 	}
 	public void loadIndexFromFolder(File packFolder) {
 		//build the index from that folder
 		ArrayList<File> files = new ArrayList<File>(8192);
-		traverseAndAddToArray(packFolder, files, true);
+		traverseAndAddToArray(packFolder, files);
 		
 		index = new ArrayList<MLPFileEntry>();
 		long pos = compatFixedHeaderSize <= 0 ? 32 : compatFixedHeaderSize;
@@ -301,7 +301,10 @@ public class MLPArch {
 			long size = files.get(i).length();
 			pos += size;
 			long end = pos;
-			MLPFileEntry entry = new MLPFileEntry(start, end, size/32, start, files.get(i).getPath());
+			String path = files.get(i).getPath();
+			path = path.replace('\\', '/');
+			path = path.substring(path.indexOf('/')+1);
+			MLPFileEntry entry = new MLPFileEntry(start, end, size/32, start, path);
 			index.add(entry);
 		}
 		indexOffset = pos;
