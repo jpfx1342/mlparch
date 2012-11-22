@@ -31,13 +31,13 @@ import java.util.Comparator;
  */
 public class MLPArch {
 	public static class MLPFileEntry {
-		public int startOffset;
-		public int endOffset;
-		public int magic0;
-		public int magic1;
+		public long startOffset;
+		public long endOffset;
+		public long magic0;
+		public long magic1;
 		public String path;
 		
-		public MLPFileEntry(int startOffset, int endOffset, int magic0, int magic1, String path) {
+		public MLPFileEntry(long startOffset, long endOffset, long magic0, long magic1, String path) {
 			this.startOffset = startOffset;
 			this.endOffset = endOffset;
 			this.magic0 = magic0;
@@ -45,7 +45,7 @@ public class MLPArch {
 			this.path = path;
 		}
 		
-		public int size() { return endOffset-startOffset; }
+		public long size() { return endOffset-startOffset; }
 		
 		@Override
 		public String toString() {
@@ -54,7 +54,7 @@ public class MLPArch {
 	}
 	
 	/** The starting index of the file index. **/
-	public int indexOffset;
+	public long indexOffset;
 	/** The file index for this archive. **/
 	public ArrayList<MLPFileEntry> index;
 	/** The file location backing this archive. This is the file we will read and
@@ -143,7 +143,7 @@ public class MLPArch {
 			String number = new String(data, Charset.forName("UTF8"));
 			
 			//get the index offset
-			indexOffset = Integer.parseInt(number, 10);
+			indexOffset = Long.parseLong(number, 10);
 		} else {
 			//we're reading as a variable length header.
 			//basically the same thing, except we read 32 bytes, and search that
@@ -160,7 +160,7 @@ public class MLPArch {
 			number = number.substring(0, lastDigit);
 			
 			//get the index offset
-			indexOffset = Integer.parseInt(number, 10);
+			indexOffset = Long.parseLong(number, 10);
 		}
 	}
 	public void loadIndexFromArchive() throws FileNotFoundException {
@@ -274,23 +274,28 @@ public class MLPArch {
 		});
 		for (int i = 0; i < children.length; i++) {
 			if (children[i].isDirectory()) {
-				traverseAndAddToArray(folder, files);
+				traverseAndAddToArray(children[i], files);
 			} else if (children[i].isFile()) {
 				files.add(children[i]);
 			}
 		}
 	}
 	public void loadIndexFromFolder(File packFolder) {
-		
 		//build the index from that folder
 		ArrayList<File> files = new ArrayList<File>(8192);
 		traverseAndAddToArray(packFolder, files);
 		
 		index = new ArrayList<MLPFileEntry>();
+		long pos = compatFixedHeaderSize <= 0 ? 32 : compatFixedHeaderSize;
 		for (int i = 0; i < files.size(); i++) {
-			MLPFileEntry entry = new MLPFileEntry(-1, -1, 0, -1, files.get(i).getPath());
+			long start = pos;
+			long size = files.get(i).length();
+			pos += size;
+			long end = pos;
+			MLPFileEntry entry = new MLPFileEntry(start, end, size/32, start, files.get(i).getPath());
 			index.add(entry);
 		}
+		indexOffset = pos;
 	}
 	/** Extracts a single file from the archive. **/
 	public void extractFile(MLPFileEntry entry, File destFolder) throws FileNotFoundException, IOException {
@@ -309,9 +314,9 @@ public class MLPArch {
 		byte[] buffer = new byte[compatWriteBufferSize];
 		int pos = 0;
 		while (true) {
-			int rem = entry.size()-pos;
+			long rem = entry.size()-pos;
 			if (rem <= 0) break;
-			int read = archAcc.read(buffer, 0, rem < compatWriteBufferSize ? rem : compatWriteBufferSize);
+			int read = archAcc.read(buffer, 0, rem < compatWriteBufferSize ? (int)rem : compatWriteBufferSize);
 			if (read <= 0) break;
 			os.write(buffer, 0, read);
 			pos += read;
