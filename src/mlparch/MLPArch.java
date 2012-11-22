@@ -274,7 +274,7 @@ public class MLPArch {
 			//we reached the end of file. probably.
 		}
 	}
-	private void traverseAndAddToArray(File folder, ArrayList<File> files) {
+	private void traverseAndAddToArray(File folder, ArrayList<File> files, boolean first) {
 		File[] children = folder.listFiles();
 		Arrays.sort(children, new Comparator<File>() {
 			@Override public int compare(File f1, File f2) {
@@ -283,16 +283,16 @@ public class MLPArch {
 		});
 		for (int i = 0; i < children.length; i++) {
 			if (children[i].isDirectory()) {
-				traverseAndAddToArray(children[i], files);
+				traverseAndAddToArray(children[i], files, false);
 			} else if (children[i].isFile()) {
-				files.add(children[i]);
+				files.add(first ? new File(children[i].getName()) : children[i]);
 			}
 		}
 	}
 	public void loadIndexFromFolder(File packFolder) {
 		//build the index from that folder
 		ArrayList<File> files = new ArrayList<File>(8192);
-		traverseAndAddToArray(packFolder, files);
+		traverseAndAddToArray(packFolder, files, true);
 		
 		index = new ArrayList<MLPFileEntry>();
 		long pos = compatFixedHeaderSize <= 0 ? 32 : compatFixedHeaderSize;
@@ -372,9 +372,9 @@ public class MLPArch {
 			MLPFileEntry entry = index.get(i);
 			File file = new File(packFolder, entry.path);
 			if (!file.exists() || file.isDirectory())
-				throw new IllegalStateException("Misplaced file: "+file.getPath());
+				throw new IllegalStateException("Misplaced file: "+entry.path);
 			if (file.length() != entry.size())
-				throw new IllegalStateException("File size changed: "+file.getPath());
+				throw new IllegalStateException("File size changed: "+entry.path);
 			
 			//okay should be good now.
 			int rpos = 0;
