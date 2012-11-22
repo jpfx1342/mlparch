@@ -397,5 +397,7 @@ public class MLPArch {
 			pos += entry.size();
 			printlnout("done.");
 		}
+		if (pos != indexOffset)
+			throw new IllegalStateException("End of write doesn't meet index position!");
 	}
 }
