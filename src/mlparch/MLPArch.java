@@ -378,7 +378,7 @@ public class MLPArch {
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-			if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
+			//if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
 			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
 			File file = new File(packFolder, entry.path);
