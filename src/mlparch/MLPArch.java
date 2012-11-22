@@ -18,6 +18,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,7 +97,7 @@ public class MLPArch {
 	public char compatNewLineChar = 0x0A; //LF
 	public char compatFieldChar = 0x20; //Space
 	public int compatMaxLineLength = 1024;
-	public int compatWriteBufferSize = 4096;
+	public int compatWriteBufferSize = 1024*8;
 	/** Allow files to be extracted even if their path would put them outside
 	 * the destination directory. Only set this to true if you know what you're
 	 * doing, as a malicious archive could unpack files anywhere on your system. **/
@@ -376,7 +378,7 @@ public class MLPArch {
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-		//	if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
+			if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
 			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
 			File file = new File(packFolder, entry.path);
@@ -405,5 +407,34 @@ public class MLPArch {
 	}
 	public void writeIndexToArchive() throws FileNotFoundException, IOException {
 		prepareWrite();
+		
+		archWrite.seek(indexOffset);
+		
+		StringBuilder sb = new StringBuilder();
+		CharsetEncoder encoder = indexCharset.newEncoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+		ByteBuffer bb = ByteBuffer.allocate(compatMaxLineLength);
+		for (int i = 0; i < index.size(); i++) {
+			MLPFileEntry entry = index.get(i);
+			sb.delete(0, sb.length());
+			
+			sb.append(entry.startOffset);
+			sb.append(compatFieldChar);
+			sb.append(entry.endOffset);
+			sb.append(compatFieldChar);
+			sb.append(entry.magic0);
+			sb.append(compatFieldChar);
+			sb.append(entry.magic1);
+			sb.append(compatFieldChar);
+			sb.append(entry.path);
+			sb.append(compatNewLineChar);
+			
+			bb.clear();
+			encoder.reset();
+			encoder.encode(CharBuffer.wrap(sb), bb, true);
+			encoder.flush(bb);
+			bb.flip();
+			
+			archWrite.write(bb.array(), 0, bb.remaining());
+		}
 	}
 }
