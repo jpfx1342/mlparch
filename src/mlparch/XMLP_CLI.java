@@ -20,9 +20,10 @@ public class XMLP_CLI {
 		System.out.println("XMLPatch XML patching utility");
 		System.out.println("Public domain code, released 2012");
 		System.out.println("Options:");
+		System.out.println("    -p - apply a patch file (default)");
 		System.out.println("    -q <arg> - do an XPath query");
-		System.out.println("    -t <arg> - set target file for patch or query");
-		System.out.println("    -p <arg> - set root directory for patch files");
+		System.out.println("    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
+		System.out.println("    -p <arg> - set root directory for patch files (default \"extract\")");
 		System.out.println("    -v - show this help");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
@@ -31,7 +32,7 @@ public class XMLP_CLI {
 		String targName = "xmlpatch.xml";
 		String pdirName = "extract";
 		String query = null;
-		int mode = 1; //0 == patch, 1 == query
+		int mode = 0; //0 == patch, 1 == query
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -56,11 +57,15 @@ public class XMLP_CLI {
 						case 'v':
 						case '?':
 							showHelp(); System.exit(0);
+						case 'p':
+							mode = 0;
+							break;
 						case 'q':
 							if (j!=arg0.length()-1)
 								throw new IllegalArgumentException("'q' short option must be last in a stack!");
 							if (++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'q'!");
+							mode = 1;
 							query = args[i];
 							break;
 						case 't':
