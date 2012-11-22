@@ -306,6 +306,9 @@ public class MLPArch {
 		}
 		indexOffset = pos;
 	}
+	public void recalculateIndex() {
+		throw new UnsupportedOperationException("Not supported yet!");
+	}
 	/** Extracts a single file from the archive. **/
 	public void unpackFile(MLPFileEntry entry, File destFolder) throws FileNotFoundException, IOException {
 		prepareRead();
@@ -344,6 +347,47 @@ public class MLPArch {
 	public void writeHeadertoArchive() throws FileNotFoundException, IOException {
 		prepareWrite();
 		
+		int headerLength = compatFixedHeaderSize > 0 ? compatFixedHeaderSize : 32; //header length
 		archWrite.seek(0);
+		
+		byte[] data = new byte[headerLength];
+		
+		//write false header
+		for (int i = 0; i < headerLength; i++)
+			data[i] = (byte)'x';
+		archWrite.write(data, 0, headerLength);
+	}
+	public void writeFilesToArchive(File packFolder) throws FileNotFoundException, IOException {
+		prepareWrite();
+		
+		//preallocate file space
+		archWrite.setLength(indexOffset);
+		
+		int pos = compatFixedHeaderSize > 0 ? compatFixedHeaderSize : 32; //header length
+		
+		byte[] buffer = new byte[compatWriteBufferSize];
+		
+		//write files
+		for (int i = 0; i < index.size(); i++) {
+			MLPFileEntry entry = index.get(i);
+			File file = new File(packFolder, entry.path);
+			if (!file.exists() || file.isDirectory())
+				throw new IllegalStateException("Misplaced file: "+file.getPath());
+			if (file.length() != entry.size())
+				throw new IllegalStateException("File size changed: "+file.getPath());
+			
+			//okay should be good now.
+			int rpos = 0;
+			FileInputStream is = new FileInputStream(file);
+			while (true) {
+				long rem = entry.size()-rpos;
+				if (rem <= 0) break;
+				int read = is.read(buffer, 0, rem < compatWriteBufferSize ? (int)rem : compatWriteBufferSize);
+				if (read <= 0) break;
+				archWrite.write(buffer, 0, read);
+				rpos += read;
+			}
+			pos += entry.size();
+		}
 	}
 }
