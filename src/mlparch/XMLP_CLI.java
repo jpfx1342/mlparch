@@ -103,25 +103,26 @@ public class XMLP_CLI {
 				throw new RuntimeException("Root patch node must be named \"xmlp\""); 
 			
 			for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
-				NamedNodeMap attr = n_xmlp_patch.getAttributes();
-				
-				//get target...
-				Node n = attr.getNamedItem("target");
-				if (n == null) { System.err.println("Patch has no target!"); continue; }
-				String p_target = n.getNodeValue();
-				
-				//get query...
-				n = attr.getNamedItem("query");
-				if (n == null) { System.err.println("Patch has no query!"); continue; }
-				String p_query = n.getNodeValue();
-				
-				//get op...
-				n = attr.getNamedItem("op");
-				if (n == null) { System.err.println("Patch has no op!"); continue; }
-				String p_op = n.getNodeValue();
-				
-				System.err.println("Performing \""+p_op+"\" on \""+p_target+"\":\""+p_query+"\"");
-				
+				if (n_xmlp_patch.getNodeName().equals("patch")) {
+					NamedNodeMap attr = n_xmlp_patch.getAttributes();
+
+					//get target...
+					Node n = attr.getNamedItem("target");
+					if (n == null) { System.err.println("Patch has no target!"); continue; }
+					String p_target = n.getNodeValue();
+
+					//get query...
+					n = attr.getNamedItem("query");
+					if (n == null) { System.err.println("Patch has no query!"); continue; }
+					String p_query = n.getNodeValue();
+
+					//get op...
+					n = attr.getNamedItem("op");
+					if (n == null) { System.err.println("Patch has no op!"); continue; }
+					String p_op = n.getNodeValue();
+
+					System.err.println("Performing \""+p_op+"\" on \""+p_target+"\":\""+p_query+"\"");
+				}
 			}
 		} else {
 			//query mode	
