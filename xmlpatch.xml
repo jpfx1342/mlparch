@@ -1,8 +1,8 @@
 <xmlp>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/@ID" >
-		<op id="print">
+		<op id="print"/>
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/@ID" >
-		<op id="print">
+		<op id="print"/>
 	</patch>
 </xmlp>

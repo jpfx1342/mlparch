@@ -4,8 +4,15 @@
  */
 package mlparch;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -21,33 +28,102 @@ import org.xml.sax.SAXException;
  * @author John Petska
  */
 public class XMLPatch {
-	public final Document doc;
+	private final DocumentBuilder docBuilder;
 	private final XPathFactory xpfactory;
 	
-	public XMLPatch(String path) throws Exception {
+	public final HashMap<String, Document> docMap = new HashMap<String, Document>();
+	
+	public final HashMap<String, XMLPatchOp> opList = new HashMap<String, XMLPatchOp>();
+	
+	public void addDefaultOps() {
+		opList.put("print", new XMLPatchOpPrint());
+	}
+		
+	public XMLPatch() throws Exception {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		doc = builder.parse(path);
+		docBuilder = factory.newDocumentBuilder();
 		xpfactory = XPathFactory.newInstance();
+		addDefaultOps();
 	}
-	public XMLPatch(Document doc) throws Exception {
-		this.doc = doc;
-		xpfactory = XPathFactory.newInstance();
+	public Document getDoc(String target) throws FileNotFoundException, SAXException, IOException {
+		Document doc = docMap.get(target);
+		if (doc == null) {
+			File file = new File(target);
+			if (!file.exists() || !file.isFile())
+				throw new RuntimeException("Couldn't locate target! (\""+file.getPath()+"\")");
+			doc = docBuilder.parse(new FileInputStream(file));
+			docMap.put(target, doc);
+		}
+		return doc;
 	}
-	public NodeList getNodes(String query) throws XPathExpressionException {
+	public NodeList getNodes(Document doc, String query) throws XPathExpressionException {
 		XPath xpath = xpfactory.newXPath();
 		NodeList nodes = (NodeList) xpath.evaluate(query, doc, XPathConstants.NODESET);
 		return nodes;
 	}
-	public void applyPatch(NodeList nodes, NamedNodeMap config, XMLPatchOp op) throws XPathExpressionException {
+	public void applyOp(Document doc, NodeList nodes, Node config, XMLPatchOp op) throws XPathExpressionException {
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
 			op.apply(config, node);
 		}
 	}
-	public void applyPatch(String query, NamedNodeMap config, XMLPatchOp op) throws XPathExpressionException {
-		applyPatch(getNodes(query), config, op);
+	public void applyOp(Document doc, String query, Node config, XMLPatchOp op) throws XPathExpressionException {
+		applyOp(doc, getNodes(doc, query), config, op);
+	}
+	public void applyPatch(File patchFile, File rootDir) throws Exception {
+		DocumentBuilderFactory patFac = DocumentBuilderFactory.newInstance();
+		DocumentBuilder patBuilder = patFac.newDocumentBuilder();
+		Document patchDoc = patBuilder.parse(new FileInputStream(patchFile));
+		Node n_xmlp = patchDoc.getFirstChild();
+		if (!n_xmlp.getNodeName().equals("xmlp"))
+			throw new RuntimeException("Root patch node must be named \"xmlp\""); 
+
+		for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
+			if (n_xmlp_patch.getNodeName().equals("patch")) {
+				NamedNodeMap n_xmlp_patch_attr = n_xmlp_patch.getAttributes();
+
+				Node n = null;
+				String p_target = null;
+				String p_query = null;
+
+				//get target...
+				n = n_xmlp_patch_attr.getNamedItem("target");
+				if (n != null) p_target = n.getNodeValue();
+
+				//get query...
+				n = n_xmlp_patch_attr.getNamedItem("query");
+				if (n != null) p_query = n.getNodeValue();
+
+				if (p_target == null) { System.err.println("Patch has no target!"); continue; }
+				if (p_query  == null) { System.err.println("Patch has no query!"); continue; }
+
+				System.out.println("Patching \""+p_target+"\":\""+p_query+"\"...");
+
+				Document doc = getDoc(new File(rootDir, p_target).getPath());
+
+				NodeList nodes = getNodes(doc, p_query);
+				for (Node n_xmlp_patch_op = n_xmlp_patch.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
+					if (n_xmlp_patch_op.getNodeName().equals("op")) {
+						NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_op.getAttributes();
+
+						String p_op = null;
+
+						//get op...
+						n = n_xmlp_patch_op_attr.getNamedItem("id");
+						if (n != null) p_op = n.getNodeValue();
+
+						if (p_op == null) { System.err.println("Op has no id!"); continue; }
+
+						XMLPatchOp op = opList.get(p_op);
+						if (op == null) { System.err.println("Unrecognized op! (\""+p_op+"\")"); continue; }
+
+						System.out.println("Excuting op \""+p_op+"\"");
+						applyOp(doc, nodes, n_xmlp_patch_op, op);
+					}
+				}
+			}
+		}
 	}
 	public static String getNameFromType(short type) {
 		switch (type) {
@@ -67,15 +143,15 @@ public class XMLPatch {
 		return "UNKNOWN_NODE";
 	}
 	public static interface XMLPatchOp {
-		public void apply(NamedNodeMap config, Node target);
+		public void apply(Node config, Node target);
 	}
-	public static class PrintValueXMLActor implements XMLPatchOp {
-		@Override public void apply(NamedNodeMap config, Node target) {
+	public static class XMLPatchOpPrintValue implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
 			System.out.println(target.getNodeName()+"("+getNameFromType(target.getNodeType())+") = "+target.getNodeValue());
 		}
 	}
-	public static class PrintXMLActor implements XMLPatchOp {
-		@Override public void apply(NamedNodeMap config, Node target) {
+	public static class XMLPatchOpPrint implements XMLPatchOp {
+		@Override public void apply(Node config, Node target) {
 			System.out.println(target.toString());
 		}
 	}
