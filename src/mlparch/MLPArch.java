@@ -360,7 +360,19 @@ public class MLPArch {
 		
 		//write false header
 		for (int i = 0; i < headerLength; i++)
-			data[i] = (byte)'x';
+			data[i] = (byte)'0';
+		
+		CharsetEncoder encoder = indexCharset.newEncoder().onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE);
+		ByteBuffer bb = ByteBuffer.allocate(headerLength);
+		
+		bb.clear();
+		encoder.reset();
+		encoder.encode(CharBuffer.wrap(Long.toString(indexOffset, 10)), bb, true);
+		encoder.flush(bb);
+		bb.flip();
+		
+		bb.get(data, headerLength-bb.remaining(), bb.remaining());
+		
 		archWrite.write(data, 0, headerLength);
 	}
 	public void writeFilesToArchive(File packFolder) throws FileNotFoundException, IOException {
