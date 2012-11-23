@@ -11,10 +11,10 @@ package mlparch;
 public class MLCLI {
 	public static void printHelp() {
 		System.out.println("Please select a subtool as follows: ");
-		System.out.println("\tjava -jar path/to/MLPArch.jar <subtool> <args>");
+		System.out.println("    java -jar path/to/MLPArch.jar <subtool> <args>");
 		System.out.println("Available subtools:");
-		System.out.println("\tMLPArch (or mlpa)");
-		System.out.println("\tXMLPatch (or xmlp)");
+		System.out.println("    MLPArch (or mlpa)");
+		System.out.println("    XMLPatch (or xmlp)");
 	}
 	public static void main(String[] args) throws Exception {
 		if (args.length < 1 || args[0].equals("--help") || args[0].equals("-v") || args[0].equals("-?")) {
