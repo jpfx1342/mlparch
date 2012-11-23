@@ -26,7 +26,7 @@ public class MLPA_CLI {
 		System.out.println("    -f <arg> - specify pack/unpack location (default \"extract\")");
 		System.out.println("    -s <arg> - pack/unpack only a single file");
 		System.out.println("    -r <arg> - pack/unpack only files matching this regex");
-		System.out.println("    -m <arg> - pack/unpack only files matching this wildcard pattern (*, ?)");
+		//System.out.println("    -m <arg> - pack/unpack only files matching this wildcard pattern (*, ?)");
 		System.out.println("    -v - show this help");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
@@ -96,6 +96,7 @@ public class MLPA_CLI {
 						case 'm':
 							if (i!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'm'!");
+							System.err.println("Attempting to use wildcard matching: This doesn't work very well, have fun!");
 							matchMode = 3;
 							matchPat = args[i];
 							break;
