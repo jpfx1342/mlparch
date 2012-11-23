@@ -7,6 +7,7 @@ package mlparch;
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.regex.Pattern;
 import mlparch.MLPArch.MLPFileEntry;
 
 /**
@@ -23,6 +24,9 @@ public class MLPA_CLI {
 		System.out.println("    -l - list mode ");
 		System.out.println("    -a <arg> - specify archive location (default \"main.1050.com.gameloft.android.ANMP.GloftPOHM.obb\")");
 		System.out.println("    -f <arg> - specify pack/unpack location (default \"extract\")");
+		System.out.println("    -s <arg> - pack/unpack only a single file");
+		System.out.println("    -r <arg> - pack/unpack only files matching this regex");
+		System.out.println("    -m <arg> - pack/unpack only files matching this wildcard pattern (*, ?)");
 		System.out.println("    -v - show this help");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
@@ -32,6 +36,8 @@ public class MLPA_CLI {
 		String tmplName = archName;
 		String packName = "extract";
 		int mode = 0; //0 == unpack, 1 == pack, 2 == list
+		int matchMode = 0; //0 == all, 1 == single, 2 == regex, 3 == wildcard
+		String matchPat = null;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -66,18 +72,32 @@ public class MLPA_CLI {
 							mode = 2; //list
 							break;
 						case 'a':
-							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'a' short option must be last in a stack!");
-							if (++i >= args.length)
+							if (i!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'a'!");
 							archName = args[i];
 							break;
 						case 'f':
-							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'f' short option must be last in a stack!");
-							if (++i >= args.length)
+							if (i!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
 							packName = args[i];
+							break;
+						case 's':
+							if (i!=arg0.length()-1 || ++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 's'!");
+							matchMode = 1;
+							matchPat = args[i];
+							break;
+						case 'r':
+							if (i!=arg0.length()-1 || ++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 'r'!");
+							matchMode = 2;
+							matchPat = args[i];
+							break;
+						case 'm':
+							if (i!=arg0.length()-1 || ++i >= args.length)
+								throw new IllegalArgumentException("Expected another bare argument after 'm'!");
+							matchMode = 3;
+							matchPat = args[i];
 							break;
 						default:
 							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
@@ -92,6 +112,22 @@ public class MLPA_CLI {
 		File archFile = new File(archName);
 		File packFile = new File(packName);
 		MLPArch arch = new MLPArch(archFile);
+		switch (matchMode) {
+			default:
+			case 0: //all
+				matchPat = null; break;
+			case 1: //single
+				matchPat = Pattern.quote(matchPat); break;
+			case 2: //regex
+				/* done. */ break;
+			case 3: //wildcard
+				matchPat = Pattern.quote(matchPat);
+				matchPat = matchPat.replace("\\*", ".*");
+				matchPat = matchPat.replace("\\?", ".");
+				break;
+		}
+		Pattern pat = matchPat==null ? null : Pattern.compile(matchPat);
+			
 		if (mode == 0 || mode == 2) {
 			//unpack or list
 			System.out.println((mode==0?"Unpacking":"Listing")+" MLPArch at \""+archFile.getPath()+"\" to \""+packFile.getPath()+"\".");
@@ -112,6 +148,8 @@ public class MLPA_CLI {
 				NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 				for (int i = 0; i < arch.index.size(); i++) {
 					MLPFileEntry entry = arch.index.get(i);
+					if (pat != null && !pat.matcher(entry.path).matches())
+						continue; //skipping
 					System.out.print("Unpacking "+(i+1)+"/"+arch.index.size()+" ("+format.format((float)(i+1)/arch.index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 						arch.unpackFile(entry, packFile);
 					System.out.println("done.");
@@ -119,7 +157,8 @@ public class MLPA_CLI {
 			} else {
 				System.out.println("Listing Index...");
 				for (int i = 0; i < arch.index.size(); i++)
-					System.out.println((i+1)+": "+arch.index.get(i).toString());
+					if (pat == null || pat.matcher(arch.index.get(i).path).matches())
+						System.out.println((i+1)+": "+arch.index.get(i).toString());
 			}
 		} else if (mode == 1) {
 			//pack
@@ -134,7 +173,7 @@ public class MLPA_CLI {
 				arch.writeHeaderToArchive();
 			
 			System.out.println("Packing files...");
-				arch.writeFilesToArchive(packFile);
+				arch.writeFilesToArchive(packFile, pat);
 			
 			System.out.println("Writing index...");
 				arch.writeIndexToArchive();

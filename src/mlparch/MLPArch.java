@@ -24,6 +24,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 /**
  * This object represents an MLPFS, as used by the My Little Pony game by 
@@ -375,7 +376,7 @@ public class MLPArch {
 		
 		archWrite.write(data, 0, headerLength);
 	}
-	public void writeFilesToArchive(File packFolder) throws FileNotFoundException, IOException {
+	public void writeFilesToArchive(File packFolder, Pattern pat) throws FileNotFoundException, IOException {
 		prepareWrite();
 		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		
@@ -390,6 +391,8 @@ public class MLPArch {
 		//write files
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
+			if (pat != null && !pat.matcher(entry.path).matches())
+				continue; //skipping
 			//if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
 			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
