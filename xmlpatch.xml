@@ -38,16 +38,105 @@
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
 	
-	<!-- allow pedastals to drop gems -->
+	<!-- sqrt clarable times and round them up to the nearest 10 -->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@ClearTime" >
+		<!--<op id="/=" value="10"/>-->
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.1"/> <!-- round up to nearest 10 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	
+	<!-- allow pedastals to drop gems at ~ 1/10 rate-->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Chance" >
+		<op id="=" value="20"/> <!-- 20% = nothing -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Chance" >
+		<op id="=" value="60"/> <!-- 60% = coins -->
+	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Chance" >
-		<op id="=" value="5"/> <!-- set to 5 (~ 1/10) -->
+		<op id="=" value="20"/> <!-- 20% = gems -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Min" >
-		<op id="=" value="1"/> <!-- set to 5 (~ 1/10) -->
+		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Max" >
-		<op id="=" value="1"/> <!-- set to 5 (~ 1/10) -->
+		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
 	
+	<!-- parasprites now have a 10% chance to drop gems when hitting them -->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Chance" >
+		<op id="=" value="70"/> <!-- 70% = nothing -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Chance" >
+		<op id="=" value="20"/> <!-- 20% = coins -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Chance" >
+		<op id="=" value="10"/> <!-- 10% = gem -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Min" >
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Max" >
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
 	
+	<!-- parasprites now have a 25% chance to drop gems on defeat -->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Chance" >
+		<op id="=" value="75"/> <!-- 75% = nothing -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Chance" >
+		<op id="=" value="50"/> <!-- 25% = coins -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Chance" >
+		<op id="=" value="25"/> <!-- 25% = gem -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Min" >
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Max" >
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	
+	<patch target="global_defines.xml" query="/Global_Defines/Derpy/@FindCoinReward" >
+		<op id="=" value="1000"/> <!-- set to 1000 -->
+	</patch>
+	<patch target="global_defines.xml" query="/Global_Defines/Derpy/@GemChance" >
+		<op id="=" value="0.5"/> <!-- set to 50% -->
+	</patch>
+	
+	<!-- minigamecosts.xml must be dummied, because some dummy forgot to add a root element. -->
+	<!-- note that this means the document will have a fake root, named "dummy". you need to include this in your queries -->
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost" dummy="true" >
+		<op id="=" value="100"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost" dummy="true" >
+		<op id="=" value="5"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir3/@cost" dummy="true" >
+		<op id="=" value="10"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/lottery/retry/@cost" dummy="true" >
+		<op id="=" value="3"/>
+	</patch>
+	
+	<!-- reduce the crap. a lot. bucking rocks. bucking parasprites. -->
+	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapBase" >
+		<op id="/=" value="20"/> <!-- divide by 10 -->
+	</patch>
+	<!-- I'm not sure what this is, but I'm pretty sure it's evil. -->
+	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapExpMulti" >
+		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
+	</patch>
+	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapBase" >
+		<op id="/=" value="10"/> <!-- divide by 10 -->
+	</patch>
+	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapExpMulti" >
+		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
+	</patch>
+	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteHourlySpawnChance" >
+		<op id="/=" value="20"/> <!-- divide by 20 -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/Respawn/@ChancePerHour" >
+		<op id="/=" value="20"/> <!-- divide by 20 -->
+	</patch>
 </xmlp>

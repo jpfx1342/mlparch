@@ -4,21 +4,26 @@
  */
 package mlparch;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.SequenceInputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -40,10 +45,18 @@ public class XMLPatch {
 	private final DocumentBuilder docBuilder;
 	private final XPathFactory xpfactory;
 	
-	public final HashMap<String, Document> docMap = new HashMap<String, Document>();
+	public static class XMLPDoc {
+		public boolean dummied;
+		public Document doc;
+
+		public XMLPDoc(boolean dummied, Document doc) {
+			this.dummied = dummied;
+			this.doc = doc;
+		}
+	}
+	public final HashMap<String, XMLPDoc> docMap = new HashMap<String, XMLPDoc>();
 	
 	public final HashMap<String, XMLPatchOp> opList = new HashMap<String, XMLPatchOp>();
-	
 	public void addDefaultOps() {
 		opList.put("print", new XMLPatchOpPrint());
 		opList.put("=", new XMLPatchOpSet());
@@ -56,7 +69,77 @@ public class XMLPatch {
 		opList.put("round", new XMLPatchOpRound());
 		opList.put("sqrt", new XMLPatchOpSqrt());
 	}
+	
+	public static class DummyInputStream extends SequenceInputStream {
+		static byte[] open = "<dummy>".getBytes();
+		static byte[] close = "</dummy>".getBytes();
 		
+		public DummyInputStream(InputStream is) {
+			super(Collections.enumeration(Arrays.asList(new InputStream[] {
+				new ByteArrayInputStream(open),
+				is,
+				new ByteArrayInputStream(close),
+			})));
+		}
+	}
+	
+	public static class DummyOutputStream extends OutputStream {
+		private int state = 0;
+		//state = 0, searching for opening dummy. data is discarded
+		//state = 1, searching for closing dummy, data is written
+		//state = 2, closing dummy matched, data is discarded (never leaves this state)
+		byte[] buffer = new byte[16];
+		int bpos = 0;
+
+		OutputStream os;
+		
+		public DummyOutputStream(OutputStream os) {
+			this.os = os;
+		}
+		
+		@Override
+		public void write(int b) throws IOException {
+			byte by = (byte)(0xFF&b);
+			switch (state) {
+				case 0: //search for opening dummy, discarding all data until a match
+					if (by == DummyInputStream.open[bpos]) {
+						buffer[bpos++] = by;
+						if (bpos == DummyInputStream.open.length) {
+							state = 1;
+							bpos = 0;
+						}
+					} else {
+						bpos = 0;
+					}
+					break;
+				case 1: //search for closing dummy, writing any data that doesn't match
+					if (by == DummyInputStream.close[bpos]) {
+						buffer[bpos++] = by;
+						if (bpos == DummyInputStream.close.length) {
+							state = 2;
+							bpos = 0;
+						}
+					} else {
+						os.write(buffer, 0, bpos);
+						os.write(b);
+						bpos = 0;
+					}
+					break;
+				case 2: //done, discard all data
+					break;
+			}
+		}
+
+		@Override
+		public void flush() throws IOException {
+			os.flush();
+		}
+
+		@Override
+		public void close() throws IOException {
+			os.close();
+		}
+	}
 	public XMLPatch() throws Exception {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
@@ -64,16 +147,21 @@ public class XMLPatch {
 		xpfactory = XPathFactory.newInstance();
 		addDefaultOps();
 	}
-	public Document getDoc(File root, String target) throws FileNotFoundException, SAXException, IOException {
-		Document doc = docMap.get(target);
+	public Document getDoc(File root, String target, boolean dummied) throws FileNotFoundException, SAXException, IOException {
+		XMLPDoc doc = docMap.get(target);
 		if (doc == null) {
 			File file = new File(root==null?new File("."):root, target);
 			if (!file.exists() || !file.isFile())
 				throw new RuntimeException("Couldn't locate target! (\""+file.getPath()+"\")");
-			doc = docBuilder.parse(new FileInputStream(file));
+			
+			if (dummied) {
+				doc = new XMLPDoc(dummied, docBuilder.parse(new DummyInputStream(new FileInputStream(file))));
+			} else {
+				doc = new XMLPDoc(dummied, docBuilder.parse(new FileInputStream(file)));
+			}
 			docMap.put(target, doc);
 		}
-		return doc;
+		return doc.doc;
 	}
 	public NodeList getNodes(Document doc, String query) throws XPathExpressionException {
 		XPath xpath = xpfactory.newXPath();
@@ -108,7 +196,8 @@ public class XMLPatch {
 				Node n = null;
 				String p_target = null;
 				String p_query = null;
-
+				boolean p_dummied = false;
+				
 				//get target...
 				n = n_xmlp_patch_attr.getNamedItem("target");
 				if (n != null) p_target = n.getNodeValue();
@@ -116,13 +205,17 @@ public class XMLPatch {
 				//get query...
 				n = n_xmlp_patch_attr.getNamedItem("query");
 				if (n != null) p_query = n.getNodeValue();
-
+				
+				//get dummied...
+				n = n_xmlp_patch_attr.getNamedItem("dummy");
+				if (n != null) p_dummied = Boolean.parseBoolean(n.getNodeValue());
+				
 				if (p_target == null) { System.err.println("Patch has no target!"); continue; }
 				if (p_query  == null) { System.err.println("Patch has no query!"); continue; }
 
 				System.out.println("Patching \""+p_target+"\":\""+p_query+"\"...");
-
-				Document doc = getDoc(rootDir, p_target);
+				
+				Document doc = getDoc(rootDir, p_target, p_dummied);
 
 				NodeList nodes = getNodes(doc, p_query);
 				for (Node n_xmlp_patch_op = n_xmlp_patch.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
@@ -151,17 +244,21 @@ public class XMLPatch {
 		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
-		for (Iterator<Entry<String, Document>> iter = docMap.entrySet().iterator(); iter.hasNext();) {
+		for (Iterator<Entry<String, XMLPDoc>> iter = docMap.entrySet().iterator(); iter.hasNext();) {
 			Entry i = iter.next();
 			String path = (String)i.getKey();
-			Document doc = (Document)i.getValue();
+			XMLPDoc doc = (XMLPDoc)i.getValue();
 			
 			//initialize StreamResult with File object to save to file
 			File outFile = new File(outDir, path);
-			System.out.println("Writing \""+path+"\"...");
+			System.out.println("Writing \""+path+"\""+(doc.dummied?" (dummied)":"")+"...");
 			
-			StreamResult result = new StreamResult(new FileWriter(outFile));
-			DOMSource source = new DOMSource(doc);
+			OutputStream os = new FileOutputStream(outFile);
+			if (doc.dummied)
+				os = new DummyOutputStream(os);
+			
+			StreamResult result = new StreamResult(new OutputStreamWriter(os));
+			Source source = new DOMSource(doc.doc);
 			transformer.transform(source, result);
 		}
 	} 
