@@ -72,29 +72,29 @@ public class MLPA_CLI {
 							mode = 2; //list
 							break;
 						case 'a':
-							if (i!=arg0.length()-1 || ++i >= args.length)
+							if (j!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'a'!");
 							archName = args[i];
 							break;
 						case 'f':
-							if (i!=arg0.length()-1 || ++i >= args.length)
+							if (j!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
 							packName = args[i];
 							break;
 						case 's':
-							if (i!=arg0.length()-1 || ++i >= args.length)
+							if (j!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 's'!");
 							matchMode = 1;
 							matchPat = args[i];
 							break;
 						case 'r':
-							if (i!=arg0.length()-1 || ++i >= args.length)
+							if (j!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'r'!");
 							matchMode = 2;
 							matchPat = args[i];
 							break;
 						case 'm':
-							if (i!=arg0.length()-1 || ++i >= args.length)
+							if (j!=arg0.length()-1 || ++i >= args.length)
 								throw new IllegalArgumentException("Expected another bare argument after 'm'!");
 							System.err.println("Attempting to use wildcard matching: This doesn't work very well, have fun!");
 							matchMode = 3;
