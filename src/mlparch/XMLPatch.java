@@ -31,7 +31,9 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -68,6 +70,9 @@ public class XMLPatch {
 		opList.put("ceil", new XMLPatchOpCeil());
 		opList.put("round", new XMLPatchOpRound());
 		opList.put("sqrt", new XMLPatchOpSqrt());
+		opList.put("+attr", new XMLPatchOpAddAttr());
+		opList.put("+elem", new XMLPatchOpAddElem());
+		opList.put("remove", new XMLPatchOpRemove());
 	}
 	
 	public static class DummyInputStream extends SequenceInputStream {
@@ -168,7 +173,7 @@ public class XMLPatch {
 		NodeList nodes = (NodeList) xpath.evaluate(query, doc, XPathConstants.NODESET);
 		return nodes;
 	}
-	public void applyOp(Document doc, NodeList nodes, Node config, XMLPatchOp op) throws XPathExpressionException {
+	public void applyOp(Document doc, NodeList nodes, Element config, XMLPatchOp op) throws XPathExpressionException {
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
 			try {
@@ -178,7 +183,7 @@ public class XMLPatch {
 			}
 		}
 	}
-	public void applyOp(Document doc, String query, Node config, XMLPatchOp op) throws XPathExpressionException {
+	public void applyOp(Document doc, String query, Element config, XMLPatchOp op) throws XPathExpressionException {
 		applyOp(doc, getNodes(doc, query), config, op);
 	}
 	public void applyPatch(File patchFile, File rootDir) throws Exception {
@@ -234,7 +239,7 @@ public class XMLPatch {
 						if (op == null) { System.err.println("Unrecognized op! (\""+p_op+"\")"); continue; }
 
 						System.out.println("Excuting op \""+p_op+"\"");
-						applyOp(doc, nodes, n_xmlp_patch_op, op);
+						applyOp(doc, nodes, (Element)n_xmlp_patch_op, op);
 					}
 				}
 			}
@@ -261,7 +266,7 @@ public class XMLPatch {
 			Source source = new DOMSource(doc.doc);
 			transformer.transform(source, result);
 		}
-	} 
+	}
 	public static String getNameFromType(short type) {
 		switch (type) {
 			case Node.ELEMENT_NODE:                return "ELEMENT_NODE";
@@ -280,20 +285,20 @@ public class XMLPatch {
 		return "UNKNOWN_NODE";
 	}
 	public static interface XMLPatchOp {
-		public void apply(Node config, Node target);
+		public void apply(Element config, Node target);
 	}
 	public static class XMLPatchOpPrintValue implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
+		@Override public void apply(Element config, Node target) {
 			System.out.println(target.getNodeName()+"("+getNameFromType(target.getNodeType())+") = "+target.getNodeValue());
 		}
 	}
 	public static class XMLPatchOpPrint implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
+		@Override public void apply(Element config, Node target) {
 			System.out.println(target.toString());
 		}
 	}
 	public static class XMLPatchOpSet implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
+		@Override public void apply(Element config, Node target) {
 			NamedNodeMap attr = config.getAttributes();
 			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
 			Node a_value = attr.getNamedItem("value");
@@ -306,12 +311,10 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpAddSet implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			NamedNodeMap attr = config.getAttributes();
-			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
-			Node a_value = attr.getNamedItem("value");
-			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
-			double value = Double.parseDouble(a_value.getNodeValue());
+		@Override public void apply(Element config, Node target) {
+			String attrS = config.getAttribute("value");
+			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org+value));
@@ -319,12 +322,10 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpSubSet implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			NamedNodeMap attr = config.getAttributes();
-			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
-			Node a_value = attr.getNamedItem("value");
-			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
-			double value = Double.parseDouble(a_value.getNodeValue());
+		@Override public void apply(Element config, Node target) {
+			String attrS = config.getAttribute("value");
+			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org-value));
@@ -332,12 +333,10 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpMulSet implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			NamedNodeMap attr = config.getAttributes();
-			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
-			Node a_value = attr.getNamedItem("value");
-			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
-			double value = Double.parseDouble(a_value.getNodeValue());
+		@Override public void apply(Element config, Node target) {
+			String attrS = config.getAttribute("value");
+			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org*value));
@@ -345,12 +344,10 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpDivSet implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			NamedNodeMap attr = config.getAttributes();
-			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
-			Node a_value = attr.getNamedItem("value");
-			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
-			double value = Double.parseDouble(a_value.getNodeValue());
+		@Override public void apply(Element config, Node target) {
+			String attrS = config.getAttribute("value");
+			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org/value));
@@ -358,18 +355,13 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpFloor implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			double sig = 0;
+		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
-			NamedNodeMap attr = config.getAttributes();
-			if (attr != null) {
-				Node a_value = attr.getNamedItem("direct");
-				if (a_value != null)
-					direct = Boolean.parseBoolean(a_value.getNodeValue());
-				a_value = attr.getNamedItem("sig");
-				if (a_value != null)
-					sig = Double.parseDouble(a_value.getNodeValue());
-			}
+			double sig = 0;
+			String attrS = config.getAttribute("direct");
+			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			attrS = config.getAttribute("sig");
+			if (attrS != null) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -381,18 +373,13 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpCeil implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			double sig = 0;
+		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
-			NamedNodeMap attr = config.getAttributes();
-			if (attr != null) {
-				Node a_value = attr.getNamedItem("direct");
-				if (a_value != null)
-					direct = Boolean.parseBoolean(a_value.getNodeValue());
-				a_value = attr.getNamedItem("sig");
-				if (a_value != null)
-					sig = Double.parseDouble(a_value.getNodeValue());
-			}
+			double sig = 0;
+			String attrS = config.getAttribute("direct");
+			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			attrS = config.getAttribute("sig");
+			if (attrS != null) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -404,18 +391,13 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpRound implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
-			double sig = 0;
+		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
-			NamedNodeMap attr = config.getAttributes();
-			if (attr != null) {
-				Node a_value = attr.getNamedItem("direct");
-				if (a_value != null)
-					direct = Boolean.parseBoolean(a_value.getNodeValue());
-				a_value = attr.getNamedItem("sig");
-				if (a_value != null)
-					sig = Double.parseDouble(a_value.getNodeValue());
-			}
+			double sig = 0;
+			String attrS = config.getAttribute("direct");
+			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			attrS = config.getAttribute("sig");
+			if (attrS != null) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -427,11 +409,45 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpSqrt implements XMLPatchOp {
-		@Override public void apply(Node config, Node target) {
+		@Override public void apply(Element config, Node target) {
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(Math.sqrt(org)));
 			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	
+	public static class XMLPatchOpAddAttr implements XMLPatchOp {
+		@Override public void apply(Element config, Node target) {
+			String name = config.getAttribute("name");
+			String value = config.getAttribute("value");
+			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
+			if (value == null) value = "";
+			
+			if (!(target instanceof Element)) throw new IllegalArgumentException("Can only add Attributes to Elements!");
+			Element elem = (Element) target;
+			
+			elem.setAttribute(name, value);
+			System.out.println("+attr \""+name+"\" = \""+value+"\"");
+		}
+	}
+	public static class XMLPatchOpAddElem implements XMLPatchOp {
+		@Override public void apply(Element config, Node target) {
+			String name = config.getAttribute("name");
+			String value = config.getAttribute("value");
+			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
+			if (value == null) value = "";
+			
+			Node child = target.appendChild(target.getOwnerDocument().createElement(name));
+			child.setNodeValue(value);
+			System.out.println("+elem \""+name+"\" = \""+value+"\"");
+		}
+	}
+	public static class XMLPatchOpRemove implements XMLPatchOp {
+		@Override public void apply(Element config, Node target) {
+			String name = config.getAttribute("name");
+			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
+			
+			target.getParentNode().removeChild(target);
+			System.out.println("removed \""+target.getNodeName()+"\"");
+		}
+	}
 }
