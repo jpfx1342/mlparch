@@ -15,7 +15,7 @@
 	</patch>-->
 	
 	<!-- sqrt pony play times and round them up to the nearest 15 -->
-	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/MiniGames/@TimeBetweenPlayActions" >
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@TimeBetweenPlayActions" >
 		<!--<op id="/=" value="10"/>-->
 		<op id="sqrt"/> <!-- sqrt -->
 		<op id="ceil" direct="true" sig="0.0666666666667"/> <!-- round up to nearest 15 -->
