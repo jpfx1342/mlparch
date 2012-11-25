@@ -318,11 +318,8 @@ public class XMLPatch {
 	public static class XMLPatchOpSet extends XMLPatchOp {
 		public XMLPatchOpSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
-			NamedNodeMap attr = config.getAttributes();
-			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
-			Node a_value = attr.getNamedItem("value");
-			if (a_value == null) throw new IllegalArgumentException("Expected 'value' attribute!");
-			String value = a_value.getNodeValue();
+			String value = config.getAttribute("value");
+			if (value == null || value.isEmpty()) throw new IllegalArgumentException("Expected 'value' attribute!");
 			
 			String org = target.getNodeValue();
 			target.setNodeValue(value);
@@ -333,7 +330,7 @@ public class XMLPatch {
 		public XMLPatchOpAddSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
-			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			if (attrS == null || attrS.isEmpty()) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -345,7 +342,7 @@ public class XMLPatch {
 		public XMLPatchOpSubSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
-			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			if (attrS == null || attrS.isEmpty()) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -357,7 +354,7 @@ public class XMLPatch {
 		public XMLPatchOpMulSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
-			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			if (attrS == null || attrS.isEmpty()) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -369,7 +366,7 @@ public class XMLPatch {
 		public XMLPatchOpDivSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
-			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
+			if (attrS == null || attrS.isEmpty()) throw new IllegalArgumentException("Expected 'value' attribute!");
 			double value = Double.parseDouble(attrS);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -383,9 +380,9 @@ public class XMLPatch {
 			boolean direct = false;
 			double sig = 0;
 			String attrS = config.getAttribute("direct");
-			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			if (attrS != null && !attrS.isEmpty()) direct = Boolean.parseBoolean(attrS);
 			attrS = config.getAttribute("sig");
-			if (attrS != null) sig = Double.parseDouble(attrS);
+			if (attrS != null && !attrS.isEmpty()) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -402,9 +399,9 @@ public class XMLPatch {
 			boolean direct = false;
 			double sig = 0;
 			String attrS = config.getAttribute("direct");
-			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			if (attrS != null && !attrS.isEmpty()) direct = Boolean.parseBoolean(attrS);
 			attrS = config.getAttribute("sig");
-			if (attrS != null) sig = Double.parseDouble(attrS);
+			if (attrS != null && !attrS.isEmpty()) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -421,9 +418,9 @@ public class XMLPatch {
 			boolean direct = false;
 			double sig = 0;
 			String attrS = config.getAttribute("direct");
-			if (attrS != null) direct = Boolean.parseBoolean(attrS);
+			if (attrS != null && !attrS.isEmpty()) direct = Boolean.parseBoolean(attrS);
 			attrS = config.getAttribute("sig");
-			if (attrS != null) sig = Double.parseDouble(attrS);
+			if (attrS != null && !attrS.isEmpty()) sig = Double.parseDouble(attrS);
 			double pow = direct ? sig : Math.pow(10, sig);
 			
 			double org = Double.parseDouble(target.getNodeValue());
@@ -447,7 +444,7 @@ public class XMLPatch {
 		@Override public void apply(Element config, Node target) {
 			String name = config.getAttribute("name");
 			String value = config.getAttribute("value");
-			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
+			if (name == null || name.isEmpty()) throw new IllegalArgumentException("Expected 'name' attribute!");
 			if (value == null) value = "";
 			
 			if (!(target instanceof Element)) throw new IllegalArgumentException("Can only add Attributes to Elements!");
@@ -462,7 +459,7 @@ public class XMLPatch {
 		@Override public void apply(Element config, Node target) {
 			String name = config.getAttribute("name");
 			String value = config.getAttribute("value");
-			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
+			if (name == null || name.isEmpty()) throw new IllegalArgumentException("Expected 'name' attribute!");
 			if (value == null) value = "";
 			
 			Node child = target.appendChild(target.getOwnerDocument().createElement(name));
@@ -473,9 +470,6 @@ public class XMLPatch {
 	public static class XMLPatchOpRemove extends XMLPatchOp {
 		public XMLPatchOpRemove(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
-			String name = config.getAttribute("name");
-			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
-			
 			target.getParentNode().removeChild(target);
 			owner.printlnout(1, "removed \""+target.getNodeName()+"\"");
 		}
