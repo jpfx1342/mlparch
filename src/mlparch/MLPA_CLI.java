@@ -27,7 +27,7 @@ public class MLPA_CLI {
 		System.out.println("    -s <arg> - pack/unpack only a single file");
 		System.out.println("    -r <arg> - pack/unpack only files matching this regex");
 		//System.out.println("    -m <arg> - pack/unpack only files matching this wildcard pattern (*, ?)");
-		System.out.println("    -v - show this help");
+		System.out.println("    -v - increase verbosity (may be repeated)");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
 	}
@@ -38,6 +38,7 @@ public class MLPA_CLI {
 		int mode = 0; //0 == unpack, 1 == pack, 2 == list
 		int matchMode = 0; //0 == all, 1 == single, 2 == regex, 3 == wildcard
 		String matchPat = null;
+		int verbosity = 0;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -59,9 +60,10 @@ public class MLPA_CLI {
 					char opt = arg0.charAt(j);
 					
 					switch (opt) {
-						case 'v':
 						case '?':
 							showHelp(); System.exit(0);
+						case 'v':
+							verbosity++; break;
 						case 'u':
 							mode = 0; //unpack
 							break;
@@ -112,7 +114,7 @@ public class MLPA_CLI {
 		
 		File archFile = new File(archName);
 		File packFile = new File(packName);
-		MLPArch arch = new MLPArch(archFile);
+		MLPArch arch = new MLPArch(verbosity, archFile);
 		switch (matchMode) {
 			default:
 			case 0: //all

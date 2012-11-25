@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.SequenceInputStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +45,15 @@ import org.xml.sax.SAXException;
  * @author John Petska
  */
 public class XMLPatch {
+	public int verbosity = 0;
+	
+	public PrintStream stdout = System.out;
+	public void printout(int l, String s)   { if (stdout != null) stdout.print  (s); }
+	public void printlnout(int l, String s) { if (stdout != null) stdout.println(s); }
+	public PrintStream stderr = System.err;
+	public void printerr(int l, String s)   { if (stderr != null) stderr.print  (s); }
+	public void printlnerr(int l, String s) { if (stderr != null) stderr.println(s); }
+	
 	private final DocumentBuilder docBuilder;
 	private final XPathFactory xpfactory;
 	
@@ -60,19 +70,19 @@ public class XMLPatch {
 	
 	public final HashMap<String, XMLPatchOp> opList = new HashMap<String, XMLPatchOp>();
 	public void addDefaultOps() {
-		opList.put("print", new XMLPatchOpPrint());
-		opList.put("=", new XMLPatchOpSet());
-		opList.put("+=", new XMLPatchOpAddSet());
-		opList.put("-=", new XMLPatchOpSubSet());
-		opList.put("*=", new XMLPatchOpMulSet());
-		opList.put("/=", new XMLPatchOpDivSet());
-		opList.put("floor", new XMLPatchOpFloor());
-		opList.put("ceil", new XMLPatchOpCeil());
-		opList.put("round", new XMLPatchOpRound());
-		opList.put("sqrt", new XMLPatchOpSqrt());
-		opList.put("+attr", new XMLPatchOpAddAttr());
-		opList.put("+elem", new XMLPatchOpAddElem());
-		opList.put("remove", new XMLPatchOpRemove());
+		opList.put("print" , new XMLPatchOpPrint(this));
+		opList.put("="     , new XMLPatchOpSet(this));
+		opList.put("+="    , new XMLPatchOpAddSet(this));
+		opList.put("-="    , new XMLPatchOpSubSet(this));
+		opList.put("*="    , new XMLPatchOpMulSet(this));
+		opList.put("/="    , new XMLPatchOpDivSet(this));
+		opList.put("floor" , new XMLPatchOpFloor(this));
+		opList.put("ceil"  , new XMLPatchOpCeil(this));
+		opList.put("round" , new XMLPatchOpRound(this));
+		opList.put("sqrt"  , new XMLPatchOpSqrt(this));
+		opList.put("+attr" , new XMLPatchOpAddAttr(this));
+		opList.put("+elem" , new XMLPatchOpAddElem(this));
+		opList.put("remove", new XMLPatchOpRemove(this));
 	}
 	
 	public static class DummyInputStream extends SequenceInputStream {
@@ -145,7 +155,8 @@ public class XMLPatch {
 			os.close();
 		}
 	}
-	public XMLPatch() throws Exception {
+	public XMLPatch(int verbosity) throws Exception {
+		this.verbosity = verbosity;
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
 		docBuilder = factory.newDocumentBuilder();
@@ -179,7 +190,7 @@ public class XMLPatch {
 			try {
 				op.apply(config, node);
 			} catch (Throwable t) {
-				System.err.println("Exception applying op on "+node+": "+t.getLocalizedMessage());
+				printlnerr(0, "Exception applying op on "+node+": "+t.getLocalizedMessage());
 			}
 		}
 	}
@@ -215,10 +226,10 @@ public class XMLPatch {
 				n = n_xmlp_patch_attr.getNamedItem("dummy");
 				if (n != null) p_dummied = Boolean.parseBoolean(n.getNodeValue());
 				
-				if (p_target == null) { System.err.println("Patch has no target!"); continue; }
-				if (p_query  == null) { System.err.println("Patch has no query!"); continue; }
+				if (p_target == null) { printlnerr(0, "Patch has no target!"); continue; }
+				if (p_query  == null) { printlnerr(0, "Patch has no query!"); continue; }
 
-				System.out.println("Patching \""+p_target+"\":\""+p_query+"\"...");
+				printlnout(0, "Patching \""+p_target+"\":\""+p_query+"\"...");
 				
 				Document doc = getDoc(rootDir, p_target, p_dummied);
 
@@ -233,12 +244,12 @@ public class XMLPatch {
 						n = n_xmlp_patch_op_attr.getNamedItem("id");
 						if (n != null) p_op = n.getNodeValue();
 
-						if (p_op == null) { System.err.println("Op has no id!"); continue; }
+						if (p_op == null) { printlnerr(0, "Op has no id!"); continue; }
 
 						XMLPatchOp op = opList.get(p_op);
-						if (op == null) { System.err.println("Unrecognized op! (\""+p_op+"\")"); continue; }
+						if (op == null) { printlnerr(0, "Unrecognized op! (\""+p_op+"\")"); continue; }
 
-						System.out.println("Excuting op \""+p_op+"\"");
+						printlnout(0, "Excuting op \""+p_op+"\"");
 						applyOp(doc, nodes, (Element)n_xmlp_patch_op, op);
 					}
 				}
@@ -256,7 +267,7 @@ public class XMLPatch {
 			
 			//initialize StreamResult with File object to save to file
 			File outFile = new File(outDir, path);
-			System.out.println("Writing \""+path+"\""+(doc.dummied?" (dummied)":"")+"...");
+			printlnout(0, "Writing \""+path+"\""+(doc.dummied?" (dummied)":"")+"...");
 			
 			OutputStream os = new FileOutputStream(outFile);
 			if (doc.dummied)
@@ -284,20 +295,28 @@ public class XMLPatch {
 		}
 		return "UNKNOWN_NODE";
 	}
-	public static interface XMLPatchOp {
-		public void apply(Element config, Node target);
+	public static abstract class XMLPatchOp {
+		public final XMLPatch owner;
+		public XMLPatchOp(XMLPatch owner) {
+			this.owner = owner;
+		}
+		
+		public abstract void apply(Element config, Node target);
 	}
-	public static class XMLPatchOpPrintValue implements XMLPatchOp {
+	public static class XMLPatchOpPrintValue extends XMLPatchOp {
+		public XMLPatchOpPrintValue(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
-			System.out.println(target.getNodeName()+"("+getNameFromType(target.getNodeType())+") = "+target.getNodeValue());
+			owner.printlnout(0, target.getNodeName()+"("+getNameFromType(target.getNodeType())+") = "+target.getNodeValue());
 		}
 	}
-	public static class XMLPatchOpPrint implements XMLPatchOp {
+	public static class XMLPatchOpPrint extends XMLPatchOp {
+		public XMLPatchOpPrint(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
-			System.out.println(target.toString());
+			owner.printlnout(0, target.toString());
 		}
 	}
-	public static class XMLPatchOpSet implements XMLPatchOp {
+	public static class XMLPatchOpSet extends XMLPatchOp {
+		public XMLPatchOpSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			NamedNodeMap attr = config.getAttributes();
 			if (attr == null) throw new IllegalArgumentException("Op had no attributes!");
@@ -307,10 +326,11 @@ public class XMLPatch {
 			
 			String org = target.getNodeValue();
 			target.setNodeValue(value);
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpAddSet implements XMLPatchOp {
+	public static class XMLPatchOpAddSet extends XMLPatchOp {
+		public XMLPatchOpAddSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
 			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
@@ -318,10 +338,11 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org+value));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpSubSet implements XMLPatchOp {
+	public static class XMLPatchOpSubSet extends XMLPatchOp {
+		public XMLPatchOpSubSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
 			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
@@ -329,10 +350,11 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org-value));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpMulSet implements XMLPatchOp {
+	public static class XMLPatchOpMulSet extends XMLPatchOp {
+		public XMLPatchOpMulSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
 			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
@@ -340,10 +362,11 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org*value));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpDivSet implements XMLPatchOp {
+	public static class XMLPatchOpDivSet extends XMLPatchOp {
+		public XMLPatchOpDivSet(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String attrS = config.getAttribute("value");
 			if (attrS == null) throw new IllegalArgumentException("Expected 'value' attribute!");
@@ -351,10 +374,11 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org/value));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpFloor implements XMLPatchOp {
+	public static class XMLPatchOpFloor extends XMLPatchOp {
+		public XMLPatchOpFloor(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
 			double sig = 0;
@@ -369,10 +393,11 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.floor(org)));
 			else
 				target.setNodeValue(Double.toString(Math.floor(org*pow)/pow));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpCeil implements XMLPatchOp {
+	public static class XMLPatchOpCeil extends XMLPatchOp {
+		public XMLPatchOpCeil(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
 			double sig = 0;
@@ -387,10 +412,11 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.ceil(org)));
 			else
 				target.setNodeValue(Double.toString(Math.ceil(org*pow)/pow));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpRound implements XMLPatchOp {
+	public static class XMLPatchOpRound extends XMLPatchOp {
+		public XMLPatchOpRound(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			boolean direct = false;
 			double sig = 0;
@@ -405,17 +431,19 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.round(org)));
 			else
 				target.setNodeValue(Double.toString(Math.round(org*pow)/pow));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpSqrt implements XMLPatchOp {
+	public static class XMLPatchOpSqrt extends XMLPatchOp {
+		public XMLPatchOpSqrt(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(Math.sqrt(org)));
-			System.out.println("\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
-	public static class XMLPatchOpAddAttr implements XMLPatchOp {
+	public static class XMLPatchOpAddAttr extends XMLPatchOp {
+		public XMLPatchOpAddAttr(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String name = config.getAttribute("name");
 			String value = config.getAttribute("value");
@@ -426,10 +454,11 @@ public class XMLPatch {
 			Element elem = (Element) target;
 			
 			elem.setAttribute(name, value);
-			System.out.println("+attr \""+name+"\" = \""+value+"\"");
+			owner.printlnout(1, "+attr \""+name+"\" = \""+value+"\"");
 		}
 	}
-	public static class XMLPatchOpAddElem implements XMLPatchOp {
+	public static class XMLPatchOpAddElem extends XMLPatchOp {
+		public XMLPatchOpAddElem(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String name = config.getAttribute("name");
 			String value = config.getAttribute("value");
@@ -438,16 +467,17 @@ public class XMLPatch {
 			
 			Node child = target.appendChild(target.getOwnerDocument().createElement(name));
 			child.setNodeValue(value);
-			System.out.println("+elem \""+name+"\" = \""+value+"\"");
+			owner.printlnout(1, "+elem \""+name+"\" = \""+value+"\"");
 		}
 	}
-	public static class XMLPatchOpRemove implements XMLPatchOp {
+	public static class XMLPatchOpRemove extends XMLPatchOp {
+		public XMLPatchOpRemove(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			String name = config.getAttribute("name");
 			if (name == null) throw new IllegalArgumentException("Expected 'name' attribute!");
 			
 			target.getParentNode().removeChild(target);
-			System.out.println("removed \""+target.getNodeName()+"\"");
+			owner.printlnout(1, "removed \""+target.getNodeName()+"\"");
 		}
 	}
 }

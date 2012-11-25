@@ -31,7 +31,7 @@ public class XMLP_CLI {
 		System.out.println("    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
 		System.out.println("    -r <arg> - set root directory for patch operation (default \"extract\")");
 		System.out.println("    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
-		System.out.println("    -v - show this help");
+		System.out.println("    -v - increase verbosity (may be repeated)");
 		System.out.println("    -? - show this help");
 		System.out.println("    --help - show this help");
 	}
@@ -41,6 +41,7 @@ public class XMLP_CLI {
 		String outdName = null;
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
+		int verbosity = 0;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -62,9 +63,10 @@ public class XMLP_CLI {
 					char opt = arg0.charAt(j);
 					
 					switch (opt) {
-						case 'v':
 						case '?':
 							showHelp(); System.exit(0);
+						case 'v':
+							verbosity++; break;
 						case 'p':
 							mode = 0;
 							break;
@@ -114,7 +116,7 @@ public class XMLP_CLI {
 		if (mode == 0) {
 			//patch mode
 			System.out.println("Applying patch file \""+targName+"\" to \""+pdirName+"\"...");
-				XMLPatch patcher = new XMLPatch();
+				XMLPatch patcher = new XMLPatch(verbosity);
 				patcher.applyPatch(targFile, pdirFile);
 			System.out.println("Writing patched documents to \""+outdName+"\"...");
 				outdFile.mkdirs();
@@ -124,8 +126,8 @@ public class XMLP_CLI {
 			System.out.println("Querying \""+query+"\" from \""+targName+"\"...");
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
-				XMLPatch patcher = new XMLPatch();
-				patcher.applyOp(patcher.getDoc(null, targName, false), query, null, new XMLPatch.XMLPatchOpPrint());
+				XMLPatch patcher = new XMLPatch(verbosity);
+				patcher.applyOp(patcher.getDoc(null, targName, false), query, null, new XMLPatch.XMLPatchOpPrint(patcher));
 		}
 	}
 }
