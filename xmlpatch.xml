@@ -14,6 +14,14 @@
 		<op id="print"/>
 	</patch>-->
 	
+	<!-- sqrt pony play times and round them up to the nearest 15 -->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/MiniGames/@TimeBetweenPlayActions" >
+		<!--<op id="/=" value="10"/>-->
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.0666666666667"/> <!-- round up to nearest 15 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	
 	<!-- sqrt construction times and round them up to the nearest 15 -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@ConstructionTime" >
 		<!--<op id="/=" value="10"/>-->
@@ -29,4 +37,17 @@
 		<op id="ceil" direct="true" sig="0.1"/> <!-- round up to nearest 10 -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
+	
+	<!-- allow pedastals to drop gems -->
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Chance" >
+		<op id="=" value="5"/> <!-- set to 5 (~ 1/10) -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Min" >
+		<op id="=" value="1"/> <!-- set to 5 (~ 1/10) -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Max" >
+		<op id="=" value="1"/> <!-- set to 5 (~ 1/10) -->
+	</patch>
+	
+	
 </xmlp>
