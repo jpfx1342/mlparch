@@ -36,11 +36,11 @@ public class MLPArch {
 	public int verbosity = 0;
 	
 	public PrintStream stdout = System.out;
-	public void printout(int l, String s)   { if (stdout != null) stdout.print  (s); }
-	public void printlnout(int l, String s) { if (stdout != null) stdout.println(s); }
+	public void printout(int l, String s)   { if (stdout != null && l <= verbosity) stdout.print  (s); }
+	public void printlnout(int l, String s) { if (stdout != null && l <= verbosity) stdout.println(s); }
 	public PrintStream stderr = System.err;
-	public void printerr(int l, String s)   { if (stderr != null) stderr.print  (s); }
-	public void printlnerr(int l, String s) { if (stderr != null) stderr.println(s); }
+	public void printerr(int l, String s)   { if (stderr != null && l <= verbosity) stderr.print  (s); }
+	public void printlnerr(int l, String s) { if (stderr != null && l <= verbosity) stderr.println(s); }
 	
 	public static class MLPFileEntry {
 		public long startOffset;
@@ -350,12 +350,12 @@ public class MLPArch {
 		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-			printout(1, "Extracting "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			printout(1, "Unpacking "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 				unpackFile(entry, destFolder);
 			if (verbosity >= 1) printlnout(1, "done.");
 			else printout(0, ".");
 		}
-		if (verbosity == 0) printlnout(0, "");
+		if (verbosity <= 0) printlnout(0, "");
 	}
 	public void writeHeaderToArchive() throws FileNotFoundException, IOException {
 		prepareWrite();

@@ -48,11 +48,11 @@ public class XMLPatch {
 	public int verbosity = 0;
 	
 	public PrintStream stdout = System.out;
-	public void printout(int l, String s)   { if (stdout != null) stdout.print  (s); }
-	public void printlnout(int l, String s) { if (stdout != null) stdout.println(s); }
+	public void printout(int l, String s)   { if (stdout != null && l <= verbosity) stdout.print  (s); }
+	public void printlnout(int l, String s) { if (stdout != null && l <= verbosity) stdout.println(s); }
 	public PrintStream stderr = System.err;
-	public void printerr(int l, String s)   { if (stderr != null) stderr.print  (s); }
-	public void printlnerr(int l, String s) { if (stderr != null) stderr.println(s); }
+	public void printerr(int l, String s)   { if (stderr != null && l <= verbosity) stderr.print  (s); }
+	public void printlnerr(int l, String s) { if (stderr != null && l <= verbosity) stderr.println(s); }
 	
 	private final DocumentBuilder docBuilder;
 	private final XPathFactory xpfactory;
@@ -190,7 +190,7 @@ public class XMLPatch {
 			try {
 				op.apply(config, node);
 			} catch (Throwable t) {
-				printlnerr(0, "Exception applying op on "+node+": "+t.getLocalizedMessage());
+				printlnerr(0, "Exception applying op on "+node+": "+t.getClass().getSimpleName()+": "+t.getLocalizedMessage());
 			}
 		}
 	}

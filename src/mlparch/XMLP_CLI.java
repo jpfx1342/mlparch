@@ -6,6 +6,7 @@ package mlparch;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,18 +23,27 @@ import org.w3c.dom.NodeList;
  * @author john
  */
 public class XMLP_CLI {
+	public static int verbosity = 0;
+	
+	public static PrintStream stdout = System.out;
+	public static void printout(int l, String s)   { if (stdout != null && l <= verbosity) stdout.print  (s); }
+	public static void printlnout(int l, String s) { if (stdout != null && l <= verbosity) stdout.println(s); }
+	public static PrintStream stderr = System.err;
+	public static void printerr(int l, String s)   { if (stderr != null && l <= verbosity) stderr.print  (s); }
+	public static void printlnerr(int l, String s) { if (stderr != null && l <= verbosity) stderr.println(s); }
+	
 	public static void showHelp() {
-		System.out.println("XMLPatch XML patching utility");
-		System.out.println("Public domain code, released 2012");
-		System.out.println("Options:");
-		System.out.println("    -p - apply a patch file (default)");
-		System.out.println("    -q <arg> - do an XPath query");
-		System.out.println("    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
-		System.out.println("    -r <arg> - set root directory for patch operation (default \"extract\")");
-		System.out.println("    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
-		System.out.println("    -v - increase verbosity (may be repeated)");
-		System.out.println("    -? - show this help");
-		System.out.println("    --help - show this help");
+		printlnout(0, "XMLPatch XML patching utility");
+		printlnout(0, "Public domain code, released 2012");
+		printlnout(0, "Options:");
+		printlnout(0, "    -p - apply a patch file (default)");
+		printlnout(0, "    -q <arg> - do an XPath query");
+		printlnout(0, "    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
+		printlnout(0, "    -r <arg> - set root directory for patch operation (default \"extract\")");
+		printlnout(0, "    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
+		printlnout(0, "    -v - increase verbosity (may be repeated)");
+		printlnout(0, "    -? - show this help");
+		printlnout(0, "    --help - show this help");
 	}
 	public static void main(String[] args) throws Exception {
 		String targName = "xmlpatch.xml";
@@ -41,7 +51,7 @@ public class XMLP_CLI {
 		String outdName = null;
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
-		int verbosity = 0;
+		verbosity = 0;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -115,15 +125,15 @@ public class XMLP_CLI {
 		
 		if (mode == 0) {
 			//patch mode
-			System.out.println("Applying patch file \""+targName+"\" to \""+pdirName+"\"...");
+			printlnout(0, "Applying patch file \""+targName+"\" to \""+pdirName+"\"...");
 				XMLPatch patcher = new XMLPatch(verbosity);
 				patcher.applyPatch(targFile, pdirFile);
-			System.out.println("Writing patched documents to \""+outdName+"\"...");
+			printlnout(0, "Writing patched documents to \""+outdName+"\"...");
 				outdFile.mkdirs();
 				patcher.writeDocMap(outdFile);
 		} else {
 			//query mode	
-			System.out.println("Querying \""+query+"\" from \""+targName+"\"...");
+			printlnout(1, "Querying \""+query+"\" from \""+targName+"\"...");
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
 				XMLPatch patcher = new XMLPatch(verbosity);
