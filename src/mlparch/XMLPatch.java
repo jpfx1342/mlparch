@@ -292,11 +292,13 @@ public class XMLPatch {
 
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
-									if (!q.negative) {
-										printlnerr(0, "Warning: tried to add duplicate query!");
-										continue patchLoop;
-									} else {
-										printlnerr(0, "Warning: cancelling out previous query!");
+									if (q.target.equals(p_target) && q.query.equals(p_query)) {
+										if (q.negative) {
+											printlnerr(0, "Warning: tried to add duplicate query!");
+											continue patchLoop;
+										} else {
+											printlnerr(0, "Warning: cancelling out previous query!");
+										}
 									}
 								}
 								
