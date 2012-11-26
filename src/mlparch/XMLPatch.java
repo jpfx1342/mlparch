@@ -366,13 +366,14 @@ public class XMLPatch {
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
 									if (q.negative) {
-										printlnout(1, "Removing nodes \""+q.target+"\":\""+q.query+"\" from \""+p_op+"\" execution...");
+										printlnout(2, "Removing nodes \""+q.target+"\":\""+q.query+"\" from \""+p_op+"\" execution...");
 										nodes.removeAll(new NodeListList(q.result));
 									} else {
-										printlnout(1, "Adding nodes \""+q.target+"\":\""+q.query+"\" to \""+p_op+"\" execution...");
+										printlnout(2, "Adding nodes \""+q.target+"\":\""+q.query+"\" to \""+p_op+"\" execution...");
 										nodes.addAll(new NodeListList(q.result));
 									}
 								}
+								printlnout(1, "Executing \""+p_op+"\"...");
 								applyOp(nodes, (Element)n_xmlp_patch_node, op);
 							}
 						}
