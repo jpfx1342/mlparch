@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.SequenceInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -194,6 +195,19 @@ public class XMLPatch {
 			os.close();
 		}
 	}
+	public static class XMLQuery {
+		public final Document doc;
+		public final String target;
+		public final String query;
+		public final NodeList result;
+		
+		public XMLQuery(Document doc, String target, String query, NodeList result) {
+			this.doc = doc;
+			this.target = target;
+			this.query = query;
+			this.result = result;
+		}
+	}
 	public XMLPatch(int verbosity) throws Exception {
 		this.verbosity = verbosity;
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -249,72 +263,103 @@ public class XMLPatch {
 			throw new RuntimeException("Root patch node must be named \"xmlp\""); 
 
 		for (Node n_xmlp_node = n_xmlp.getFirstChild(); n_xmlp_node != null; n_xmlp_node = n_xmlp_node.getNextSibling()) {
-			if (n_xmlp_node.getNodeName().equals("patch")) {
-				NamedNodeMap n_xmlp_node_attr = n_xmlp_node.getAttributes();
-				
-				Node n = null;
-				String p_target = null;
-				String p_query = null;
-				
-				//get target...
-				n = n_xmlp_node_attr.getNamedItem("target");
-				if (n != null) p_target = n.getNodeValue();
-				
-				//get query...
-				n = n_xmlp_node_attr.getNamedItem("query");
-				if (n != null) p_query = n.getNodeValue();
-				
-				if (p_target == null) { printlnerr(0, "Patch has no target!"); continue; }
-				if (p_query  == null) { printlnerr(0, "Patch has no query!"); continue; }
-
-				printlnout(0, "Patching \""+p_target+"\":\""+p_query+"\"...");
-				
-				Document doc = getDoc(rootDir, p_target, null);
-
-				NodeList nodes = getNodes(doc, p_query);
-				for (Node n_xmlp_patch_op = n_xmlp_node.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
-					if (n_xmlp_patch_op.getNodeName().equals("op")) {
-						NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_op.getAttributes();
-
-						String p_op = null;
-
-						//get op...
-						n = n_xmlp_patch_op_attr.getNamedItem("id");
-						if (n != null) p_op = n.getNodeValue();
-
-						if (p_op == null) { printlnerr(0, "Op has no id!"); continue; }
-
-						XMLPatchOp op = opList.get(p_op);
-						if (op == null) { printlnerr(0, "Unrecognized op! (\""+p_op+"\")"); continue; }
-
-						printlnout(0, "Excuting op \""+p_op+"\"");
-						applyOp(doc, nodes, (Element)n_xmlp_patch_op, op);
-					}
-				}
-			} else if (n_xmlp_node.getNodeName().equals("load")) {
-				NamedNodeMap n_xmlp_node_attr = n_xmlp_node.getAttributes();
-				
-				Node n = null;
-				String p_target = null;
-				
-				//get target...
-				n = n_xmlp_node_attr.getNamedItem("target");
-				if (n != null) p_target = n.getNodeValue();
-				
-				if (p_target == null) { printlnerr(0, "Load has no target!"); continue; }
-				
-				HashMap<String, String> options = new HashMap<String, String>();
-				
-				for (int i = 0; i < n_xmlp_node_attr.getLength(); i++) {
-					Node item = n_xmlp_node_attr.item(i);
-					if (!item.getNodeName().equals("target")) {
-						options.put(item.getNodeName(), item.getNodeValue());
-					}
-				}
+			if (n_xmlp_node instanceof Element) {
+				Element e_xmlp_node = (Element) n_xmlp_node;
+				if (n_xmlp_node.getNodeName().equals("patch")) {
+					String patch_name = e_xmlp_node.getAttribute("name");
+					if (patch_name == null || patch_name.isEmpty())
+						printlnout(0, "Running anonymous patch...");
+					else printlnout(0, "Running patch \""+patch_name+"\"...");
 					
-				printlnout(0, "Loading \""+p_target+"\" with options... "+options);
-				
-				getDoc(rootDir, p_target, options);
+					ArrayList<XMLQuery> queryList = new ArrayList<XMLQuery>();
+					patchLoop:
+					for (Node n_xmlp_patch_node = n_xmlp_node.getFirstChild(); n_xmlp_patch_node != null; n_xmlp_patch_node = n_xmlp_patch_node.getNextSibling()) {
+						if (n_xmlp_patch_node instanceof Element) {
+							Element e_xmlp_patch_node = (Element) n_xmlp_patch_node;
+							if (n_xmlp_patch_node.getNodeName().equals("addquery")) {
+								String p_target = e_xmlp_patch_node.getAttribute("target");
+								String p_query = e_xmlp_patch_node.getAttribute("query");
+								
+								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "AddQuery has no target!"); continue; }
+								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "AddQuery has no query!"); continue; }
+
+								printlnout(1, "Adding query \""+p_target+"\":\""+p_query+"\"...");
+
+								for (int i = 0; i < queryList.size(); i++) {
+									XMLQuery q = queryList.get(i);
+									if (q.target.equals(p_target) && q.query.equals(p_query)) {
+										printlnerr(0, "Warning: tried to add duplicate query!");
+										continue patchLoop;
+									}
+								}
+								
+								Document doc = getDoc(rootDir, p_target, null);
+								NodeList nodes = getNodes(doc, p_query);
+								
+								queryList.add(new XMLQuery(doc, p_target, p_query, nodes));
+							} if (n_xmlp_patch_node.getNodeName().equals("remquery")) {
+								String p_target = e_xmlp_patch_node.getAttribute("target");
+								String p_query = e_xmlp_patch_node.getAttribute("query");
+								
+								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "RemQuery has no target!"); continue; }
+								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "RemQuery has no query!"); continue; }
+
+								printlnout(1, "Removing query \""+p_target+"\":\""+p_query+"\"...");
+								
+								for (int i = 0; i < queryList.size(); i++) {
+									XMLQuery q = queryList.get(i);
+									if (q.target.equals(p_target) && q.query.equals(p_query)) {
+										queryList.remove(i);
+										break;
+									}
+								}
+							} if (n_xmlp_patch_node.getNodeName().equals("clearquery")) {
+								printlnout(1, "Clearing query list...");
+								
+								queryList.clear();
+							} else if (n_xmlp_patch_node.getNodeName().equals("op")) {
+								NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_node.getAttributes();
+
+								String p_op = e_xmlp_patch_node.getAttribute("id");
+								
+								if (p_op == null || p_op.isEmpty()) { printlnerr(0, "Op has no id!"); continue; }
+
+								XMLPatchOp op = opList.get(p_op);
+								if (op == null) { printlnerr(0, "Unrecognized op! (\""+p_op+"\")"); continue; }
+								
+								for (int i = 0; i < queryList.size(); i++) {
+									XMLQuery q = queryList.get(i);
+									printlnout(1, "Excuting op \""+p_op+"\" on \""+q.target+"\":\""+q.query+"\"...");
+									applyOp(q.doc, q.result, (Element)n_xmlp_patch_node, op);
+								}
+							}
+						}
+					}
+				} else if (n_xmlp_node.getNodeName().equals("load")) {
+					NamedNodeMap n_xmlp_node_attr = n_xmlp_node.getAttributes();
+
+					Node n = null;
+					String p_target = null;
+
+					//get target...
+					n = n_xmlp_node_attr.getNamedItem("target");
+					if (n != null) p_target = n.getNodeValue();
+
+					if (p_target == null) { printlnerr(0, "Load has no target!"); continue; }
+
+					HashMap<String, String> options = new HashMap<String, String>();
+
+					for (int i = 0; i < n_xmlp_node_attr.getLength(); i++) {
+						Node item = n_xmlp_node_attr.item(i);
+						if (!item.getNodeName().equals("target")) {
+							options.put(item.getNodeName(), item.getNodeValue());
+						}
+					}
+
+					printlnout(0, "Loading \""+p_target+"\" with options... "+options);
+
+					getDoc(rootDir, p_target, options);
+				}
 			}
 		}
 	}

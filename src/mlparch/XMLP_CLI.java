@@ -41,6 +41,7 @@ public class XMLP_CLI {
 		printlnout(0, "    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
 		printlnout(0, "    -r <arg> - set root directory for patch operation (default \"extract\")");
 		printlnout(0, "    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
+		printlnout(0, "    -f - activate fake mode (don't actually write files)");
 		printlnout(0, "    -v - increase verbosity (may be repeated)");
 		printlnout(0, "    -? - show this help");
 		printlnout(0, "    --help - show this help");
@@ -51,6 +52,7 @@ public class XMLP_CLI {
 		String outdName = null;
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
+		boolean fakeMode = false;
 		verbosity = 0;
 		
 		for (int i = 0; i < args.length; i++) {
@@ -109,6 +111,9 @@ public class XMLP_CLI {
 								throw new IllegalArgumentException("Expected another bare argument after 'o'!");
 							outdName = args[i];
 							break;
+						case 'f':
+							fakeMode = true;
+							break;
 						default:
 							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
 					}
@@ -128,9 +133,11 @@ public class XMLP_CLI {
 			printlnout(0, "Applying patch file \""+targName+"\" to \""+pdirName+"\"...");
 				XMLPatch patcher = new XMLPatch(verbosity);
 				patcher.applyPatch(targFile, pdirFile);
-			printlnout(0, "Writing patched documents to \""+outdName+"\"...");
-				outdFile.mkdirs();
-				patcher.writeDocMap(outdFile);
+			if (!fakeMode) {
+				printlnout(0, "Writing patched documents to \""+outdName+"\"...");
+					outdFile.mkdirs();
+					patcher.writeDocMap(outdFile);
+			}
 		} else {
 			//query mode	
 			printlnout(1, "Querying \""+query+"\" from \""+targName+"\"...");
