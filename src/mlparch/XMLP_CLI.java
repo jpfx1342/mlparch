@@ -36,8 +36,8 @@ public class XMLP_CLI {
 		printlnout(0, "XMLPatch XML patching utility");
 		printlnout(0, "Public domain code, released 2012");
 		printlnout(0, "Options:");
-		printlnout(0, "    -p - apply a patch file (default)");
-		printlnout(0, "    -q <arg> - do an XPath query");
+		printlnout(0, "    -p - patch mode (default)");
+		printlnout(0, "    -q <arg> - XPath query mode");
 		printlnout(0, "    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
 		printlnout(0, "    -r <arg> - set root directory for patch operation (default \"extract\")");
 		printlnout(0, "    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
