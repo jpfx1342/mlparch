@@ -14,48 +14,71 @@
 		<op id="print"/>
 	</patch>-->
 	
-	<!-- sqrt pony play times and round them up to the nearest 15 -->
+	<!-- sqrt pony play times and round them up to the nearest 2 -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@TimeBetweenPlayActions" >
-		<!--<op id="/=" value="10"/>-->
 		<op id="sqrt"/> <!-- sqrt -->
-		<op id="ceil" direct="true" sig="0.0666666666667"/> <!-- round up to nearest 15 -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@PlayActionSkipAgainCost" >
+		<op id="/=" value="2"/>
+		<op id="ceil"/>
+	</patch>
 	
-	<!-- sqrt construction times and round them up to the nearest 15 -->
+	<!-- sqrt construction times and round them up to the nearest 2 -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@ConstructionTime" >
-		<!--<op id="/=" value="10"/>-->
 		<op id="sqrt"/> <!-- sqrt -->
-		<op id="ceil" direct="true" sig="0.0666666666667"/> <!-- round up to nearest 15 -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@SkipCost" >
+		<op id="sqrt"/> <!-- sqrt -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
 	
-	<!-- sqrt item production times and round them up to the nearest 10 -->
+	<!-- sqrt item production times and round them up to the nearest 2 -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/Production/@Time" >
-		<!--<op id="/=" value="10"/>-->
 		<op id="sqrt"/> <!-- sqrt -->
-		<op id="ceil" direct="true" sig="0.1"/> <!-- round up to nearest 10 -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/Production/@SkipCost" >
+		<op id="sqrt"/> <!-- sqrt -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
 	
-	<!-- sqrt clarable times and round them up to the nearest 10 -->
+	<!-- sqrt clarable times and round them up to the nearest 2 -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@ClearTime" >
-		<!--<op id="/=" value="10"/>-->
 		<op id="sqrt"/> <!-- sqrt -->
-		<op id="ceil" direct="true" sig="0.1"/> <!-- round up to nearest 10 -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@SkipCost" >
+		<op id="sqrt"/> <!-- sqrt -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
 	
-	<!-- allow pedastals to drop gems at ~ 1/10 rate-->
+	<!-- allow pedastals to drop gems at 25% rate-->
+	<!-- add some attribute -->
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard" >
+		<op id="+attr" name="Nothing_Heart_Chance" /> 
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Chance" >
-		<op id="=" value="20"/> <!-- 20% = nothing -->
+		<op id="=" value="10"/> <!-- 15% = nothing -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Chance" >
-		<op id="=" value="60"/> <!-- 60% = coins -->
+		<op id="=" value="65"/> <!-- 60% = coins -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Chance" >
-		<op id="=" value="20"/> <!-- 20% = gems -->
+		<op id="=" value="25"/> <!-- 20% = gems -->
 	</patch>
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Heart_Chance" >
+		<op id="=" value="5"/>
+	</patch> -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Min" >
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
@@ -63,16 +86,27 @@
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
 	
-	<!-- parasprites now have a 10% chance to drop gems when hitting them -->
+	<!-- parasprites now have a 20% chance to drop gems when hitting them -->
+	<!-- add some attributes -->
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward" >
+		<op id="+attr" name="Nothing_Heart_Chance" />
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Chance" >
-		<op id="=" value="70"/> <!-- 70% = nothing -->
+		<op id="=" value="50"/> <!-- 50% = nothing -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Chance" >
-		<op id="=" value="20"/> <!-- 20% = coins -->
+		<op id="=" value="30"/> <!-- 30% = coins -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Chance" >
-		<op id="=" value="10"/> <!-- 10% = gem -->
+		<op id="=" value="20"/> <!-- 20% = gem -->
 	</patch>
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Heart_Chance" >
+		<op id="=" value="5"/>
+	</patch>-->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Min" >
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
@@ -80,21 +114,32 @@
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
 	
-	<!-- parasprites now have a 25% chance to drop gems on defeat -->
+	<!-- parasprites now have a 40% chance to drop some gems on defeat -->
+	<!-- add some attributes -->
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward" >
+		<op id="+attr" name="Nothing_Heart_Chance" />
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Chance" >
-		<op id="=" value="75"/> <!-- 75% = nothing -->
+		<op id="=" value="10"/> <!-- 10% = nothing -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Chance" >
-		<op id="=" value="50"/> <!-- 25% = coins -->
+		<op id="=" value="50"/> <!-- 50% = coins -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Chance" >
-		<op id="=" value="25"/> <!-- 25% = gem -->
+		<op id="=" value="40"/> <!-- 40% = gem -->
 	</patch>
+	<!-- doesn't work :(
+	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Heart_Chance" >
+		<op id="=" value="10"/>
+	</patch>-->
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Min" >
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Max" >
-		<op id="=" value="1"/> <!-- set to 1 -->
+		<op id="=" value="3"/> <!-- set to 1 -->
 	</patch>
 	
 	<patch target="global_defines.xml" query="/Global_Defines/Derpy/@FindCoinReward" >
@@ -104,19 +149,46 @@
 		<op id="=" value="0.5"/> <!-- set to 50% -->
 	</patch>
 	
+	<!-- reduce expansion hard costs -->
+	<patch target="global_defines.xml" query="/Global_Defines/Expansions/Expand/@HardCost" >
+		<op id="sqrt"/>
+		<op id="ceil"/>
+	</patch>
+	
+	<fix target="minigamecosts.xml" spacingfix="true" />
+	
+	<!-- make things that cost hearts cost gems instead -->
+	<patch target="shopdata.xml" query="/ShopItemData/ShopItemCategory/ShopItem[@HardCurrency='3']/@HardCurrency" >
+		<op id="=" value="2"/>
+	</patch>
+	
 	<!-- minigamecosts.xml must be dummied, because some dummy forgot to add a root element. -->
 	<!-- note that this means the document will have a fake root, named "dummy". you need to include this in your queries -->
-	<patch target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost" dummy="true" >
+	<fix target="minigamecosts.xml" dummyroot="true" />
+	
+	<!-- reduce gem cost for 3rd tier minigames -->
+	<patch target="minigamecosts.xml" query="/dummy/ballbounce/teir3/@cost" >
+		<op id="=" value="2"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/magicbook/teir3/@cost" >
+		<op id="=" value="2"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/applepicking/teir3/@cost" >
+		<op id="=" value="2"/>
+	</patch>
+	
+	<!-- reduce premium currency costs for lotto -->
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost" >
 		<op id="=" value="100"/>
 	</patch>
-	<patch target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost" dummy="true" >
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost" >
 		<op id="=" value="5"/>
 	</patch>
-	<patch target="minigamecosts.xml" query="/dummy/lottery/teir3/@cost" dummy="true" >
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir3/@cost" >
 		<op id="=" value="10"/>
 	</patch>
-	<patch target="minigamecosts.xml" query="/dummy/lottery/retry/@cost" dummy="true" >
-		<op id="=" value="3"/>
+	<patch target="minigamecosts.xml" query="/dummy/lottery/retry/@cost" >
+		<op id="=" value="1"/>
 	</patch>
 	
 	<!-- reduce the crap. a lot. bucking rocks. bucking parasprites. -->
@@ -134,9 +206,9 @@
 		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
 	</patch>
 	<patch target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteHourlySpawnChance" >
-		<op id="/=" value="20"/> <!-- divide by 20 -->
+		<op id="/=" value="15"/> <!-- divide by 20 -->
 	</patch>
 	<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/Respawn/@ChancePerHour" >
-		<op id="/=" value="20"/> <!-- divide by 20 -->
+		<op id="/=" value="15"/> <!-- divide by 20 -->
 	</patch>
 </xmlp>
