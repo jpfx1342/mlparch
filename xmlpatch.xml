@@ -1,19 +1,4 @@
 <xmlp>
-	<!-- print out ponies by ID -->
-	<!--<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/@ID" >
-		<op id="print"/>
-	</patch>-->
-	
-	<!-- print out buildings by ID -->
-	<!--<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/@ID" >
-		<op id="print"/>
-	</patch>-->
-	
-	<!-- print out production items by ID -->
-	<!--<patch target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/@ID" >
-		<op id="print"/>
-	</patch>-->
-	
 	<!-- sqrt pony play times and round them up to the nearest 2 -->
 	<patch name="reducePonyTimes">
 		<addquery target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@TimeBetweenPlayActions"/>
