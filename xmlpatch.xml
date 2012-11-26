@@ -155,7 +155,8 @@
 		<op id="ceil"/>
 	</patch>
 	
-	<!-- Need to fix shopdata.xml because the devs did something silly and didn't properly space attributes, like this attr="value"otherattr="othervalue" -->
+	<!-- Need to lead shopdata.xml spacially because the devs did something silly and didn't properly space attributes, like this attr="value"otherattr="othervalue" -->
+	<!-- Btw, this is a load action. you can use it to load a document with special options. note that it must appear before the file is referenced to actually work. -->
 	<load target="shopdata.xml" whitespacefix="true" />
 	
 	<!-- make things that cost hearts cost gems instead -->
@@ -190,6 +191,34 @@
 	</patch>
 	<patch target="minigamecosts.xml" query="/dummy/lottery/retry/@cost" >
 		<op id="=" value="1"/>
+	</patch>
+	
+	<!-- make tier 2 lotto use coins instead of hearts -->
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost" >
+		<op id="=" value="3000"/>
+	</patch>
+	<patch target="minigamecosts.xml" query="/dummy/lottery/teir2/@currency" >
+		<op id="=" value="coins"/>
+	</patch>
+	
+	<!-- increase bits payout for lotto -->
+	<patch target="lottogame1.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max" >
+		<op id="*=" value="10"/>
+	</patch>
+	<patch target="lottogame2.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max" >
+		<op id="*=" value="10"/>
+	</patch>
+	<patch target="lottogame3.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max" >
+		<op id="*=" value="10"/>
+	</patch>
+	<patch target="lottogame1.xml" query="/loot_table/item[@objectype='3']/@max" >
+		<op id="*=" value="2"/>
+	</patch>
+	<patch target="lottogame2.xml" query="/loot_table/item[@objectype='3']/@max" >
+		<op id="*=" value="2"/>
+	</patch>
+	<patch target="lottogame3.xml" query="/loot_table/item[@objectype='3']/@max" >
+		<op id="*=" value="2"/>
 	</patch>
 	
 	<!-- reduce the crap. a lot. bucking rocks. bucking parasprites. -->
