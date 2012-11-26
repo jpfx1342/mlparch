@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.SequenceInputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,8 +28,10 @@ import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -247,14 +250,17 @@ public class XMLPatch {
 		return nodes;
 	}
 	public void applyOp(List<Node> nodes, Element config, XMLPatchOp op) throws XPathExpressionException {
-		for (int i = 0; i < nodes.size(); i++) {
-			Node node = nodes.get(i);
-			try {
-				op.apply(config, node);
-			} catch (Throwable t) {
-				printlnerr(0, "Exception applying op on "+node+": "+t.getClass().getSimpleName()+": "+t.getLocalizedMessage());
+		if (nodes.size() == 0)
+			printlnout(0, "Warning: executing op on 0 nodes!");
+		else
+			for (int i = 0; i < nodes.size(); i++) {
+				Node node = nodes.get(i);
+				try {
+					op.apply(config, node);
+				} catch (Throwable t) {
+					printlnerr(0, "Exception applying op on "+node+": "+t.getClass().getSimpleName()+": "+t.getLocalizedMessage());
+				}
 			}
-		}
 	}
 	public void applyOp(Document doc, String query, Element config, XMLPatchOp op) throws XPathExpressionException {
 		applyOp(new NodeListList(getNodes(doc, query)), config, op);
@@ -409,7 +415,7 @@ public class XMLPatch {
 	public void writeDocMap(File outDir) throws Exception {
 		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
+		
 		for (Iterator<Entry<String, XMLPDoc>> iter = docMap.entrySet().iterator(); iter.hasNext();) {
 			Entry i = iter.next();
 			String path = (String)i.getKey();
@@ -460,9 +466,30 @@ public class XMLPatch {
 		}
 	}
 	public static class XMLPatchOpPrint extends XMLPatchOp {
-		public XMLPatchOpPrint(XMLPatch owner) { super(owner); }
+		public final Transformer transformer;
+		
+		
+		public XMLPatchOpPrint(XMLPatch owner) {
+			super(owner);
+			Transformer ts = null;
+			try {
+				ts = TransformerFactory.newInstance().newTransformer();
+				ts.setOutputProperty(OutputKeys.INDENT, "yes");
+				ts.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			} catch (Exception ex) { }
+			transformer = ts;
+		}
 		@Override public void apply(Element config, Node target) {
-			owner.printlnout(0, target.toString());
+			if (target instanceof Element && transformer != null) {
+				StringWriter sw = new StringWriter();
+				Result r = new StreamResult(sw);
+				Source s = new DOMSource(target);
+				try {
+					transformer.transform(s, r);
+				} catch (TransformerException te) { sw.append('\n'); sw.append(te.getClass().getSimpleName()); sw.append(":"); sw.append(te.getMessageAndLocation()); }
+				owner.printlnout(0, sw.toString());
+			} else
+				owner.printlnout(0, target.toString());
 		}
 	}
 	public static class XMLPatchOpSet extends XMLPatchOp {
