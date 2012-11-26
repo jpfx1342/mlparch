@@ -155,7 +155,8 @@
 		<op id="ceil"/>
 	</patch>
 	
-	<fix target="minigamecosts.xml" spacingfix="true" />
+	<!-- Need to fix shopdata.xml because the devs did something silly and didn't properly space attributes, like this attr="value"otherattr="othervalue" -->
+	<load target="shopdata.xml" whitespacefix="true" />
 	
 	<!-- make things that cost hearts cost gems instead -->
 	<patch target="shopdata.xml" query="/ShopItemData/ShopItemCategory/ShopItem[@HardCurrency='3']/@HardCurrency" >
@@ -164,7 +165,7 @@
 	
 	<!-- minigamecosts.xml must be dummied, because some dummy forgot to add a root element. -->
 	<!-- note that this means the document will have a fake root, named "dummy". you need to include this in your queries -->
-	<fix target="minigamecosts.xml" dummyroot="true" />
+	<load target="minigamecosts.xml" dummyroot="true" />
 	
 	<!-- reduce gem cost for 3rd tier minigames -->
 	<patch target="minigamecosts.xml" query="/dummy/ballbounce/teir3/@cost" >
