@@ -58,11 +58,11 @@ public class XMLPatch {
 	private final XPathFactory xpfactory;
 	
 	public static class XMLPDoc {
-		public boolean dummied;
+		public HashMap<String, String> options;
 		public Document doc;
 
-		public XMLPDoc(boolean dummied, Document doc) {
-			this.dummied = dummied;
+		public XMLPDoc(HashMap<String, String> options, Document doc) {
+			this.options = options;
 			this.doc = doc;
 		}
 	}
@@ -83,6 +83,45 @@ public class XMLPatch {
 		opList.put("+attr" , new XMLPatchOpAddAttr(this));
 		opList.put("+elem" , new XMLPatchOpAddElem(this));
 		opList.put("remove", new XMLPatchOpRemove(this));
+	}
+	
+	public static class WhitespaceFixerInputStream extends InputStream {
+		public String fixChars = "\"";
+		public String append = " ";
+		public int quotChar  = '"';
+		
+		int appendPos = -1;
+		boolean quot = false;
+		
+		InputStream is;
+		public WhitespaceFixerInputStream(InputStream is) {
+			this.is = is;
+		}
+		
+		
+		@Override
+		public int read() throws IOException {
+			//either dump an append char, or reset to -1.
+			//if we're not appending, do nothing
+			if (appendPos >= 0)
+				if (appendPos >= append.length())
+					appendPos = -1;
+				else
+					return append.charAt(appendPos++);
+			
+			//read a char...
+			int c = is.read();
+			
+			//don't modify string literals.
+			if (c == quotChar)
+				quot = !quot;
+			
+			//if it's one of our fix characters, prepare to append
+			if (!quot && fixChars.indexOf(c) >= 0)
+				appendPos = 0;
+			//then write the char
+			return c;
+		}
 	}
 	
 	public static class DummyInputStream extends SequenceInputStream {
@@ -163,18 +202,22 @@ public class XMLPatch {
 		xpfactory = XPathFactory.newInstance();
 		addDefaultOps();
 	}
-	public Document getDoc(File root, String target, boolean dummied) throws FileNotFoundException, SAXException, IOException {
+	public Document getDoc(File root, String target, HashMap<String, String> options) throws FileNotFoundException, SAXException, IOException {
+		if (options == null)
+			options = new HashMap<String, String>(1);
 		XMLPDoc doc = docMap.get(target);
 		if (doc == null) {
 			File file = new File(root==null?new File("."):root, target);
 			if (!file.exists() || !file.isFile())
 				throw new RuntimeException("Couldn't locate target! (\""+file.getPath()+"\")");
 			
-			if (dummied) {
-				doc = new XMLPDoc(dummied, docBuilder.parse(new DummyInputStream(new FileInputStream(file))));
-			} else {
-				doc = new XMLPDoc(dummied, docBuilder.parse(new FileInputStream(file)));
-			}
+			InputStream is = new FileInputStream(file);
+			if (Boolean.parseBoolean(options.get("whitespacefix")))
+				is = new WhitespaceFixerInputStream(is);
+			if (Boolean.parseBoolean(options.get("dummyroot")))
+				is = new DummyInputStream(is);
+			
+			doc = new XMLPDoc(options, docBuilder.parse(is));
 			docMap.put(target, doc);
 		}
 		return doc.doc;
@@ -205,36 +248,31 @@ public class XMLPatch {
 		if (!n_xmlp.getNodeName().equals("xmlp"))
 			throw new RuntimeException("Root patch node must be named \"xmlp\""); 
 
-		for (Node n_xmlp_patch = n_xmlp.getFirstChild(); n_xmlp_patch != null; n_xmlp_patch = n_xmlp_patch.getNextSibling()) {
-			if (n_xmlp_patch.getNodeName().equals("patch")) {
-				NamedNodeMap n_xmlp_patch_attr = n_xmlp_patch.getAttributes();
-
+		for (Node n_xmlp_node = n_xmlp.getFirstChild(); n_xmlp_node != null; n_xmlp_node = n_xmlp_node.getNextSibling()) {
+			if (n_xmlp_node.getNodeName().equals("patch")) {
+				NamedNodeMap n_xmlp_node_attr = n_xmlp_node.getAttributes();
+				
 				Node n = null;
 				String p_target = null;
 				String p_query = null;
-				boolean p_dummied = false;
 				
 				//get target...
-				n = n_xmlp_patch_attr.getNamedItem("target");
+				n = n_xmlp_node_attr.getNamedItem("target");
 				if (n != null) p_target = n.getNodeValue();
-
-				//get query...
-				n = n_xmlp_patch_attr.getNamedItem("query");
-				if (n != null) p_query = n.getNodeValue();
 				
-				//get dummied...
-				n = n_xmlp_patch_attr.getNamedItem("dummy");
-				if (n != null) p_dummied = Boolean.parseBoolean(n.getNodeValue());
+				//get query...
+				n = n_xmlp_node_attr.getNamedItem("query");
+				if (n != null) p_query = n.getNodeValue();
 				
 				if (p_target == null) { printlnerr(0, "Patch has no target!"); continue; }
 				if (p_query  == null) { printlnerr(0, "Patch has no query!"); continue; }
 
 				printlnout(0, "Patching \""+p_target+"\":\""+p_query+"\"...");
 				
-				Document doc = getDoc(rootDir, p_target, p_dummied);
+				Document doc = getDoc(rootDir, p_target, null);
 
 				NodeList nodes = getNodes(doc, p_query);
-				for (Node n_xmlp_patch_op = n_xmlp_patch.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
+				for (Node n_xmlp_patch_op = n_xmlp_node.getFirstChild(); n_xmlp_patch_op != null; n_xmlp_patch_op = n_xmlp_patch_op.getNextSibling()) {
 					if (n_xmlp_patch_op.getNodeName().equals("op")) {
 						NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_op.getAttributes();
 
@@ -253,6 +291,30 @@ public class XMLPatch {
 						applyOp(doc, nodes, (Element)n_xmlp_patch_op, op);
 					}
 				}
+			} else if (n_xmlp_node.getNodeName().equals("load")) {
+				NamedNodeMap n_xmlp_node_attr = n_xmlp_node.getAttributes();
+				
+				Node n = null;
+				String p_target = null;
+				
+				//get target...
+				n = n_xmlp_node_attr.getNamedItem("target");
+				if (n != null) p_target = n.getNodeValue();
+				
+				if (p_target == null) { printlnerr(0, "Load has no target!"); continue; }
+				
+				HashMap<String, String> options = new HashMap<String, String>();
+				
+				for (int i = 0; i < n_xmlp_node_attr.getLength(); i++) {
+					Node item = n_xmlp_node_attr.item(i);
+					if (!item.getNodeName().equals("target")) {
+						options.put(item.getNodeName(), item.getNodeValue());
+					}
+				}
+					
+				printlnout(0, "Loading \""+p_target+"\" with options... "+options);
+				
+				getDoc(rootDir, p_target, options);
 			}
 		}
 	}
@@ -267,10 +329,10 @@ public class XMLPatch {
 			
 			//initialize StreamResult with File object to save to file
 			File outFile = new File(outDir, path);
-			printlnout(0, "Writing \""+path+"\""+(doc.dummied?" (dummied)":"")+"...");
+			printlnout(0, "Writing \""+path+"\"...");
 			
 			OutputStream os = new FileOutputStream(outFile);
-			if (doc.dummied)
+			if (Boolean.parseBoolean(doc.options.get("dummyroot")))
 				os = new DummyOutputStream(os);
 			
 			StreamResult result = new StreamResult(new OutputStreamWriter(os));

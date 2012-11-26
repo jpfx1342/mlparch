@@ -137,7 +137,7 @@ public class XMLP_CLI {
 				//String query = "/GameObjects/GameObject[@Category=\"Pony\"]/@ID";
 				//String query = "/GameObjects/GameObject[@Category=\"Pony_House\"]/Construction/@ConstructionTime";
 				XMLPatch patcher = new XMLPatch(verbosity);
-				patcher.applyOp(patcher.getDoc(null, targName, false), query, null, new XMLPatch.XMLPatchOpPrint(patcher));
+				patcher.applyOp(patcher.getDoc(null, targName, null), query, null, new XMLPatch.XMLPatchOpPrint(patcher));
 		}
 	}
 }
