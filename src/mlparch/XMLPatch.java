@@ -430,7 +430,7 @@ public class XMLPatch {
 			
 			String org = target.getNodeValue();
 			target.setNodeValue(value);
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpAddSet extends XMLPatchOp {
@@ -442,7 +442,7 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org+value));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpSubSet extends XMLPatchOp {
@@ -454,7 +454,7 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org-value));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpMulSet extends XMLPatchOp {
@@ -466,7 +466,7 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org*value));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpDivSet extends XMLPatchOp {
@@ -478,7 +478,7 @@ public class XMLPatch {
 			
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(org/value));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpFloor extends XMLPatchOp {
@@ -497,7 +497,7 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.floor(org)));
 			else
 				target.setNodeValue(Double.toString(Math.floor(org*pow)/pow));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpCeil extends XMLPatchOp {
@@ -516,7 +516,7 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.ceil(org)));
 			else
 				target.setNodeValue(Double.toString(Math.ceil(org*pow)/pow));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpRound extends XMLPatchOp {
@@ -535,7 +535,7 @@ public class XMLPatch {
 				target.setNodeValue(Integer.toString((int)Math.round(org)));
 			else
 				target.setNodeValue(Double.toString(Math.round(org*pow)/pow));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpSqrt extends XMLPatchOp {
@@ -543,7 +543,7 @@ public class XMLPatch {
 		@Override public void apply(Element config, Node target) {
 			double org = Double.parseDouble(target.getNodeValue());
 			target.setNodeValue(Double.toString(Math.sqrt(org)));
-			owner.printlnout(1, "\""+org+"\" > \""+target.getNodeValue()+"\"");
+			owner.printlnout(3, "\""+org+"\" > \""+target.getNodeValue()+"\"");
 		}
 	}
 	public static class XMLPatchOpAddAttr extends XMLPatchOp {
@@ -558,7 +558,7 @@ public class XMLPatch {
 			Element elem = (Element) target;
 			
 			elem.setAttribute(name, value);
-			owner.printlnout(1, "+attr \""+name+"\" = \""+value+"\"");
+			owner.printlnout(3, "+attr \""+name+"\" = \""+value+"\"");
 		}
 	}
 	public static class XMLPatchOpAddElem extends XMLPatchOp {
@@ -571,14 +571,14 @@ public class XMLPatch {
 			
 			Node child = target.appendChild(target.getOwnerDocument().createElement(name));
 			child.setNodeValue(value);
-			owner.printlnout(1, "+elem \""+name+"\" = \""+value+"\"");
+			owner.printlnout(3, "+elem \""+name+"\" = \""+value+"\"");
 		}
 	}
 	public static class XMLPatchOpRemove extends XMLPatchOp {
 		public XMLPatchOpRemove(XMLPatch owner) { super(owner); }
 		@Override public void apply(Element config, Node target) {
 			target.getParentNode().removeChild(target);
-			owner.printlnout(1, "removed \""+target.getNodeName()+"\"");
+			owner.printlnout(3, "removed \""+target.getNodeName()+"\"");
 		}
 	}
 }
