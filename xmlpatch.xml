@@ -68,16 +68,16 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Chance"/>
 		<op id="=" value="10"/> <!-- 15% = nothing -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Chance"/>
 		<op id="=" value="65"/> <!-- 60% = coins -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Chance"/>
 		<op id="=" value="25"/> <!-- 20% = gems -->
 		
 		<!--
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Heart_Chance" >
 		<op id="=" value="5"/> -->
 	</patch>
@@ -99,16 +99,16 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Chance"/>
 		<op id="=" value="50"/> <!-- 50% = nothing -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Chance"/>
 		<op id="=" value="30"/> <!-- 30% = coins -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Chance"/>
 		<op id="=" value="20"/> <!-- 20% = gem -->
 		
 		<!--
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Heart_Chance"/>
 		<op id="=" value="5"/> -->
 	</patch>
@@ -130,16 +130,16 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Chance"/>
 		<op id="=" value="10"/> <!-- 10% = nothing -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Chance"/>
 		<op id="=" value="50"/> <!-- 50% = coins -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Chance"/>
 		<op id="=" value="40"/> <!-- 40% = gem -->
 		
 		<!--
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Heart_Chance"/>
 		<op id="=" value="10"/> -->
 	</patch>
@@ -148,7 +148,7 @@
 		<addnodes target="global_defines.xml" query="/Global_Defines/Derpy/@FindCoinReward"/>
 		<op id="=" value="1000"/> <!-- set to 1000 -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="global_defines.xml" query="/Global_Defines/Derpy/@GemChance"/>
 		<op id="=" value="0.5"/> <!-- set to 50% -->
 	</patch>
@@ -186,15 +186,15 @@
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost"/>
 		<op id="=" value="100"/>
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
 		<op id="=" value="5"/>
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir3/@cost"/>
 		<op id="=" value="10"/>
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/retry/@cost"/>
 		<op id="=" value="1"/>
 	</patch>
@@ -204,7 +204,7 @@
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
 		<op id="=" value="3000"/>
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@currency"/>
 		<op id="=" value="coins"/>
 	</patch>
@@ -227,12 +227,12 @@
 		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapBase"/>
 		<op id="/=" value="20"/>
 		
-		<clearnodes/>
+		<clearqueries/>
 		<!-- I'm not sure what this is, but I'm pretty sure it's evil. -->
 		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapExpMulti"/>
 		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/Respawn/@ChancePerHour"/>
 		<op id="/=" value="15"/> <!-- divide by 20 -->
 	</patch>
@@ -241,11 +241,11 @@
 		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapBase"/>
 		<op id="/=" value="10"/> <!-- divide by 10 -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapExpMulti"/>
 		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
 		
-		<clearnodes/>
+		<clearqueries/>
 		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteHourlySpawnChance"/>
 		<op id="/=" value="15"/> <!-- divide by 20 -->
 	</patch>

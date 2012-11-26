@@ -17,9 +17,12 @@ import java.io.PrintStream;
 import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -200,12 +203,14 @@ public class XMLPatch {
 		public final String target;
 		public final String query;
 		public final NodeList result;
+		public final boolean negative;
 		
-		public XMLQuery(Document doc, String target, String query, NodeList result) {
+		public XMLQuery(Document doc, String target, String query, NodeList result, boolean negative) {
 			this.doc = doc;
 			this.target = target;
 			this.query = query;
 			this.result = result;
+			this.negative = negative;
 		}
 	}
 	public XMLPatch(int verbosity) throws Exception {
@@ -241,9 +246,9 @@ public class XMLPatch {
 		NodeList nodes = (NodeList) xpath.evaluate(query, doc, XPathConstants.NODESET);
 		return nodes;
 	}
-	public void applyOp(Document doc, NodeList nodes, Element config, XMLPatchOp op) throws XPathExpressionException {
-		for (int i = 0; i < nodes.getLength(); i++) {
-			Node node = nodes.item(i);
+	public void applyOp(List<Node> nodes, Element config, XMLPatchOp op) throws XPathExpressionException {
+		for (int i = 0; i < nodes.size(); i++) {
+			Node node = nodes.get(i);
 			try {
 				op.apply(config, node);
 			} catch (Throwable t) {
@@ -252,7 +257,7 @@ public class XMLPatch {
 		}
 	}
 	public void applyOp(Document doc, String query, Element config, XMLPatchOp op) throws XPathExpressionException {
-		applyOp(doc, getNodes(doc, query), config, op);
+		applyOp(new NodeListList(getNodes(doc, query)), config, op);
 	}
 	public void applyPatch(File patchFile, File rootDir) throws Exception {
 		DocumentBuilderFactory patFac = DocumentBuilderFactory.newInstance();
@@ -283,28 +288,55 @@ public class XMLPatch {
 								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "AddQuery has no target!"); continue; }
 								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "AddQuery has no query!"); continue; }
 
-								printlnout(2, "Adding query \""+p_target+"\":\""+p_query+"\"...");
+								printlnout(2, "Adding nodes with query \""+p_target+"\":\""+p_query+"\"...");
 
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
-									if (q.target.equals(p_target) && q.query.equals(p_query)) {
+									if (!q.negative) {
 										printlnerr(0, "Warning: tried to add duplicate query!");
 										continue patchLoop;
+									} else {
+										printlnerr(0, "Warning: cancelling out previous query!");
 									}
 								}
 								
 								Document doc = getDoc(rootDir, p_target, null);
 								NodeList nodes = getNodes(doc, p_query);
 								
-								queryList.add(new XMLQuery(doc, p_target, p_query, nodes));
-							} if (n_xmlp_patch_node.getNodeName().equals("remnodes")) {
+								queryList.add(new XMLQuery(doc, p_target, p_query, nodes, false));
+							} else if (n_xmlp_patch_node.getNodeName().equals("remnodes")) {
+								String p_target = e_xmlp_patch_node.getAttribute("target");
+								String p_query = e_xmlp_patch_node.getAttribute("query");
+								
+								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "AddQuery has no target!"); continue; }
+								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "AddQuery has no query!"); continue; }
+
+								printlnout(2, "Removing nodes with query \""+p_target+"\":\""+p_query+"\"...");
+
+								for (int i = 0; i < queryList.size(); i++) {
+									XMLQuery q = queryList.get(i);
+									if (q.target.equals(p_target) && q.query.equals(p_query)) {
+										if (q.negative) {
+											printlnerr(0, "Warning: tried to add duplicate query!");
+											continue patchLoop;
+										} else {
+											printlnerr(0, "Warning: cancelling out previous query!");
+										}
+									}
+								}
+								
+								Document doc = getDoc(rootDir, p_target, null);
+								NodeList nodes = getNodes(doc, p_query);
+								
+								queryList.add(new XMLQuery(doc, p_target, p_query, nodes, true));
+							} else if (n_xmlp_patch_node.getNodeName().equals("remquery")) {
 								String p_target = e_xmlp_patch_node.getAttribute("target");
 								String p_query = e_xmlp_patch_node.getAttribute("query");
 								
 								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "RemQuery has no target!"); continue; }
 								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "RemQuery has no query!"); continue; }
 
-								printlnout(2, "Removing nodes \""+p_target+"\":\""+p_query+"\"...");
+								printlnout(2, "Removing query \""+p_target+"\":\""+p_query+"\"...");
 								
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
@@ -313,25 +345,33 @@ public class XMLPatch {
 										break;
 									}
 								}
-							} if (n_xmlp_patch_node.getNodeName().equals("clearnodes")) {
-								printlnout(2, "Clearing nodes list...");
+							} else if (n_xmlp_patch_node.getNodeName().equals("clearqueries")) {
+								printlnout(2, "Clearing query list...");
 								
 								queryList.clear();
 							} else if (n_xmlp_patch_node.getNodeName().equals("op")) {
 								NamedNodeMap n_xmlp_patch_op_attr = n_xmlp_patch_node.getAttributes();
-
+								
 								String p_op = e_xmlp_patch_node.getAttribute("id");
 								
 								if (p_op == null || p_op.isEmpty()) { printlnerr(0, "Op has no id!"); continue; }
-
+								
 								XMLPatchOp op = opList.get(p_op);
 								if (op == null) { printlnerr(0, "Unrecognized op! (\""+p_op+"\")"); continue; }
 								
+								ArrayList<Node> nodes = new ArrayList<Node>();
+								
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
-									printlnout(1, "Excuting op \""+p_op+"\" on \""+q.target+"\":\""+q.query+"\"...");
-									applyOp(q.doc, q.result, (Element)n_xmlp_patch_node, op);
+									if (q.negative) {
+										printlnout(1, "Removing nodes \""+q.target+"\":\""+q.query+"\" from \""+p_op+"\" execution...");
+										nodes.removeAll(new NodeListList(q.result));
+									} else {
+										printlnout(1, "Adding nodes \""+q.target+"\":\""+q.query+"\" to \""+p_op+"\" execution...");
+										nodes.addAll(new NodeListList(q.result));
+									}
 								}
+								applyOp(nodes, (Element)n_xmlp_patch_node, op);
 							}
 						}
 					}
