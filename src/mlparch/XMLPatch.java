@@ -283,7 +283,7 @@ public class XMLPatch {
 								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "AddQuery has no target!"); continue; }
 								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "AddQuery has no query!"); continue; }
 
-								printlnout(1, "Adding query \""+p_target+"\":\""+p_query+"\"...");
+								printlnout(2, "Adding query \""+p_target+"\":\""+p_query+"\"...");
 
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
@@ -304,7 +304,7 @@ public class XMLPatch {
 								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "RemQuery has no target!"); continue; }
 								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "RemQuery has no query!"); continue; }
 
-								printlnout(1, "Removing query \""+p_target+"\":\""+p_query+"\"...");
+								printlnout(2, "Removing query \""+p_target+"\":\""+p_query+"\"...");
 								
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
@@ -314,7 +314,7 @@ public class XMLPatch {
 									}
 								}
 							} if (n_xmlp_patch_node.getNodeName().equals("clearquery")) {
-								printlnout(1, "Clearing query list...");
+								printlnout(2, "Clearing query list...");
 								
 								queryList.clear();
 							} else if (n_xmlp_patch_node.getNodeName().equals("op")) {
