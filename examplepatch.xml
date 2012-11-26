@@ -4,11 +4,11 @@
 	<patch name="printPonies"> <!-- this name may also be empty or non-existent. the patch will be treated as anonymous, but this isn't recommended -->
 		<!-- parts of a patch are executed in order -->
 		
-		<!-- add a set of nodes to this patch -->
-		<!-- this is the XPath format so you can read more here: http://www.w3schools.com/xpath/default.asp -->
+		<!-- add a set of nodes to this patch. remember that a 'node' may be either an attribute or an element -->
+		<!-- this is the XPath format, so you can read more here: http://www.w3schools.com/xpath/default.asp -->
 		<!-- this query says (it may help to read the query from right to left): -->
 		<!-- get every 'ID' Attribute which is attached to every GameObject Element (where it's category equals 'pony') which is attached to the root GameObjects Element -->
-		<addquery target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/@ID"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/@ID"/>
 		
 		<!-- ops are applied to all nodes collected so far -->
 		<op id="print"/>

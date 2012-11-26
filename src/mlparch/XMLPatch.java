@@ -276,7 +276,7 @@ public class XMLPatch {
 					for (Node n_xmlp_patch_node = n_xmlp_node.getFirstChild(); n_xmlp_patch_node != null; n_xmlp_patch_node = n_xmlp_patch_node.getNextSibling()) {
 						if (n_xmlp_patch_node instanceof Element) {
 							Element e_xmlp_patch_node = (Element) n_xmlp_patch_node;
-							if (n_xmlp_patch_node.getNodeName().equals("addquery")) {
+							if (n_xmlp_patch_node.getNodeName().equals("addnodes")) {
 								String p_target = e_xmlp_patch_node.getAttribute("target");
 								String p_query = e_xmlp_patch_node.getAttribute("query");
 								
@@ -297,14 +297,14 @@ public class XMLPatch {
 								NodeList nodes = getNodes(doc, p_query);
 								
 								queryList.add(new XMLQuery(doc, p_target, p_query, nodes));
-							} if (n_xmlp_patch_node.getNodeName().equals("remquery")) {
+							} if (n_xmlp_patch_node.getNodeName().equals("remnodes")) {
 								String p_target = e_xmlp_patch_node.getAttribute("target");
 								String p_query = e_xmlp_patch_node.getAttribute("query");
 								
 								if (p_target == null || p_target.isEmpty()) { printlnerr(0, "RemQuery has no target!"); continue; }
 								if (p_query  == null || p_query.isEmpty()) { printlnerr(0, "RemQuery has no query!"); continue; }
 
-								printlnout(2, "Removing query \""+p_target+"\":\""+p_query+"\"...");
+								printlnout(2, "Removing nodes \""+p_target+"\":\""+p_query+"\"...");
 								
 								for (int i = 0; i < queryList.size(); i++) {
 									XMLQuery q = queryList.get(i);
@@ -313,8 +313,8 @@ public class XMLPatch {
 										break;
 									}
 								}
-							} if (n_xmlp_patch_node.getNodeName().equals("clearquery")) {
-								printlnout(2, "Clearing query list...");
+							} if (n_xmlp_patch_node.getNodeName().equals("clearnodes")) {
+								printlnout(2, "Clearing nodes list...");
 								
 								queryList.clear();
 							} else if (n_xmlp_patch_node.getNodeName().equals("op")) {
