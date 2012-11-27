@@ -46,7 +46,7 @@
 		<op id="round"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
 	<patch name="reduceClearableSkipCosts">
-		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@SkipCost"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@ClearSkipHardCost"/>
 		<op id="sqrt"/> <!-- sqrt -->
 		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
 	</patch>
@@ -64,7 +64,12 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Max"/>
 		<op id="=" value="1"/> <!-- set to 1 -->
 	</patch>
-	<patch name="rebalancePedestalDrops">
+	<patch name="rebalancePedestalCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Max"/>
+		<op id="*=" value="2"/>
+	</patch>
+	<patch name="rebalancePedestalDropRatio">
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Chance"/>
 		<op id="=" value="10"/> <!-- 10% = nothing -->
 		
@@ -94,6 +99,11 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Min"/>
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Max"/>
 		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	<patch name="rebalanceParaspritHitCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Max"/>
+		<op id="*=" value="5"/>
 	</patch>
 	<patch name="rebalanceParaspriteHitDrops">
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Chance"/>
@@ -129,7 +139,12 @@
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Max"/>
 		<op id="=" value="3"/>
 	</patch>
-	<patch name="rebalanceParaspriteDefeatDrops">
+	<patch name="rebalanceParaspriteDefeatCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Max"/>
+		<op id="*=" value="10"/>
+	</patch>
+	<patch name="rebalanceParaspriteDefeatDropRatio">
 		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Chance"/>
 		<op id="=" value="10"/> <!-- 10% = nothing -->
 		
@@ -157,7 +172,7 @@
 	</patch>
 	
 	<patch name="reduceExpansionHardCosts">
-		<addnodes target="global_defines.xml" query="/Global_Defines/Expansions/Expand/@HardCost"/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Expansion/Expand/@HardCost"/>
 		<op id="sqrt"/>
 		<op id="round"/>
 	</patch>
@@ -176,7 +191,7 @@
 	<load target="minigamecosts.xml" dummyroot="true" />
 	
 	<!-- reduce gem cost for 3rd tier minigames -->
-	<!-- this actually seems to have no effect for some reason, might be a collision with GL's sale system -->
+	<!-- this looks like it has no effect, but it actually does. the costs seem to be hardcoded into the display system -->
 	<patch name="reduce3rdTierMinigameCost">
 		<addnodes target="minigamecosts.xml" query="/dummy/ballbounce/teir3/@cost"/>
 		<addnodes target="minigamecosts.xml" query="/dummy/magicbook/teir3/@cost"/>
@@ -187,7 +202,7 @@
 	<!-- reduce premium currency costs for lotto -->
 	<patch name="reduceLottoCosts">
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost"/>
-		<op id="=" value="100"/>
+		<op id="=" value="1000"/>
 		
 		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
@@ -203,9 +218,11 @@
 	</patch>
 	
 	<!-- make tier 2 lotto use coins instead of hearts -->
+	<!-- note that the game will still show tier 2 lotto as costing hearts, but it doesn't -->
+	<!-- no, you don't have to spend 5000 hearts to play the lotto -->
 	<patch name="lottocostHeartsToCoins">
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
-		<op id="=" value="3000"/>
+		<op id="=" value="5000"/>
 		
 		<clearqueries/>
 		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@currency"/>
@@ -218,18 +235,32 @@
 	<!-- where each set had a specialty: laughter & honesty = bits, kindness & loyalty = hearts; generosity & magic = gems -->
 	<!-- but alas, it's not possible. at least not yet. -->
 	
+	<patch name="ponySnipsSizeFix">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@ID='Pony_Snips']/Model/@Scale" />
+		<op id="*=" value="0.9" />
+	</patch>
+	
 	<!-- increased payouts for lotto make them a slightly better investment. shaddup, it's a game. -->
 	<patch name="increaseLottoPayoutBits">
-		<addnodes target="lottogame1.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max"/>
-		<addnodes target="lottogame2.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max"/>
-		<addnodes target="lottogame3.xml" query="/loot_table/item[@objectype='1']/@min | /loot_table/item[@objectype='1']/@max"/>
+		<addnodes target="lottogame1.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
+		<addnodes target="lottogame2.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
+		<addnodes target="lottogame3.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
 		<op id="*=" value="10"/>
 	</patch>
 	<patch name="increaseMaxLottoPayoutGems">
-		<addnodes target="lottogame1.xml" query="/loot_table/item[@objectype='3']/@max"/>
-		<addnodes target="lottogame2.xml" query="/loot_table/item[@objectype='3']/@max"/>
-		<addnodes target="lottogame3.xml" query="/loot_table/item[@objectype='3']/@max"/>
+		<addnodes target="lottogame1.xml" query="/loot_table/item[@objecttype='3']/@max"/>
+		<addnodes target="lottogame2.xml" query="/loot_table/item[@objecttype='3']/@max"/>
+		<addnodes target="lottogame3.xml" query="/loot_table/item[@objecttype='3']/@max"/>
 		<op id="*=" value="2"/>
+	</patch>
+	
+	<patch name="uniformCamera">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/@Phone_Max" />
+		<op id="*=" value="2" />
+		
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/@Min" />
+		<op id="/=" value="2" />
 	</patch>
 	
 	<!-- reduce the rock/parasprite armies. a lot. bucking rocks. bucking parasprites. -->
