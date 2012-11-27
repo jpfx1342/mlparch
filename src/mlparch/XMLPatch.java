@@ -381,7 +381,7 @@ public class XMLPatch {
 								}
 								printlnout(1, "Executing \""+p_op+"\"...");
 								applyOp(nodes, (Element)n_xmlp_patch_node, op);
-							}
+							} else printlnout(0, "Warning: unrecognized patch action: "+n_xmlp_patch_node.getNodeName());
 						}
 					}
 				} else if (n_xmlp_node.getNodeName().equals("load")) {
@@ -408,7 +408,7 @@ public class XMLPatch {
 					printlnout(0, "Loading \""+p_target+"\" with options... "+options);
 
 					getDoc(rootDir, p_target, options);
-				}
+				} else printlnout(0, "Warning: unrecognized action: "+n_xmlp_node.getNodeName());
 			}
 		}
 	}
