@@ -256,7 +256,7 @@
 	
 	<patch name="uniformCamera">
 		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@PhoneMax" />
-		<op id="*=" value="2" />
+		<op id="*=" value="1.5" />
 		
 		<clearqueries/>
 		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@Min" />
