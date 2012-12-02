@@ -14,6 +14,6 @@ Phlogiston.jar
 /nbproject/private/
 
 #Ignore game data and program output
-/*.obb
-/extract/
-/out/
+*.obb
+/wd/extract/
+/wd/out/
