@@ -17,3 +17,6 @@ Phlogiston.jar
 *.obb
 /wd/extract/
 /wd/out/
+/wd/*.md
+/wd/*.jar
+/*release.zip
