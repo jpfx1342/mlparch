@@ -425,7 +425,7 @@ public class MLPArch {
 			}
 			pos += entry.size();
 			if (verbosity >= 1) printlnout(1, "done.");
-			else printout(0, ".");
+			else { if (i%100==0) { printout(0, "("+i+"/"+index.size()+")"); } else printout(0, "."); }
 		}
 		if (verbosity <= 0) printlnout(0, "");
 		if (pos != indexOffset)
