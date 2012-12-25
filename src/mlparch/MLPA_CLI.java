@@ -32,6 +32,7 @@ public class MLPA_CLI {
 		printlnout(0, "    -u - unpack mode (default)");
 		printlnout(0, "    -p - pack mode");
 		printlnout(0, "    -l - list mode ");
+		printlnout(0, "    --csv - list entries as csv (also supresses most output)");
 		printlnout(0, "    -a <arg> - specify archive location (default \"main.1050.com.gameloft.android.ANMP.GloftPOHM.obb\")");
 		printlnout(0, "    -f <arg> - specify pack/unpack location (default \"extract\")");
 		printlnout(0, "    -s <arg> - pack/unpack only a single file");
@@ -49,6 +50,7 @@ public class MLPA_CLI {
 		int matchMode = 0; //0 == all, 1 == single, 2 == regex, 3 == wildcard
 		String matchPat = null;
 		verbosity = 0;
+		int listFmt = 0; //0 == normal, 1 == csv
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg0 = args[i];
@@ -58,6 +60,9 @@ public class MLPA_CLI {
 				
 				if (arg0.equals("help")) {
 					showHelp(); System.exit(0);
+				} else if (arg0.equals("csv")) {
+					mode = 2; //list
+					listFmt = 1;
 				} else {
 					throw new IllegalArgumentException("Unrecognized long option: '"+arg0+"'.");
 				}
@@ -143,20 +148,21 @@ public class MLPA_CLI {
 			
 		if (mode == 0 || mode == 2) {
 			//unpack or list
-			printlnout(0, (mode==0?"Unpacking":"Listing")+" MLPArch at \""+archFile.getPath()+"\" to \""+packFile.getPath()+"\".");
+			int headerV = (mode == 2 && listFmt != 0) ?1:0;
+			printlnout(headerV, (mode==0?"Unpacking":"Listing")+" MLPArch at \""+archFile.getPath()+"\" to \""+packFile.getPath()+"\".");
 			
-			printout(0, "Reading header...");
+			printout(headerV, "Reading header...");
 				arch.loadHeaderFromArchive();
-			printlnout(0, "done.");
-			printlnout(0, "\tIndex Start: "+arch.indexOffset);
+			printlnout(headerV, "done.");
+			printlnout(headerV, "\tIndex Start: "+arch.indexOffset);
 			
-			printout(0, "Reading index...");
+			printout(headerV, "Reading index...");
 				arch.loadIndexFromArchive();
-			printlnout(0, "done.");
+			printlnout(headerV, "done.");
 			printlnout(1, "\tFile Count: "+arch.index.size());
 			
 			if (mode == 0) {
-				printlnout(0, "Unpacking archive...");
+				printlnout(headerV, "Unpacking archive...");
 				packFile.mkdir();
 				NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 				for (int i = 0; i < arch.index.size(); i++) {
@@ -166,14 +172,17 @@ public class MLPA_CLI {
 					printout(1, "Unpacking "+(i+1)+"/"+arch.index.size()+" ("+format.format((float)(i+1)/arch.index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 						arch.unpackFile(entry, packFile);
 					if (verbosity >= 1) printlnout(1, "done.");
-					else printout(0, ".");
+					else { if (i%100==0) { printout(0, "("+i+"/"+arch.index.size()+")"); } else printout(0, "."); }
 				}
 				if (verbosity <= 0) printlnout(0, "");
 			} else {
-				printlnout(0, "Listing Index...");
+				printlnout(headerV, "Listing Index...");
 				for (int i = 0; i < arch.index.size(); i++)
 					if (pat == null || pat.matcher(arch.index.get(i).path).matches())
-						printlnout(0, (i+1)+": "+arch.index.get(i).toString());
+						if (listFmt == 1)
+							printlnout(0, (i+1)+", "+arch.index.get(i).toCSV());
+						else
+							printlnout(0, (i+1)+": "+arch.index.get(i).toString());
 			}
 		} else if (mode == 1) {
 			//pack
