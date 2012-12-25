@@ -1,0 +1,307 @@
+<xmlp>
+	<!-- sqrt pony play times and round them up to the nearest 2 -->
+	<patch name="reducePonyTimes">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@TimeBetweenPlayActions"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="round"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch name="reducePonySkipCosts">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/Minigames/@PlayActionSkipAgainCost"/>
+		<op id="/=" value="2"/>
+		<op id="ceil"/>
+	</patch>
+	
+	<!-- sqrt construction times and round them up to the nearest 2 -->
+	<patch name="reduceConstructionTimes">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@ConstructionTime"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="round"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch name="reduceConstructionSkipCosts">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/Construction/@SkipCost"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	
+	<!-- sqrt item production times and round them up to the nearest 2 -->
+	<patch name="reduceProductionTimes">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/Production/@Time"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="round"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch name="reduceProductionSkipCosts">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/Production/@SkipCost"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	
+	<!-- sqrt clearable times and round them up to the nearest 2 -->
+	<patch name="reduceClearableTimes">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@ClearTime"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil" direct="true" sig="0.5"/> <!-- round up to nearest 2 -->
+		<op id="round"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	<patch name="reduceClearableSkipCosts">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/ClearingData/@ClearSkipHardCost"/>
+		<op id="sqrt"/> <!-- sqrt -->
+		<op id="ceil"/> <!-- force to integer value (sig==0 does this) -->
+	</patch>
+	
+	<!-- allow pedastals to drop gems at 25% rate-->
+	<!-- adding hearts doesn't work :(
+	<patch name="addHeartsToPedestalDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard" >
+		<op id="+attr" name="Nothing_Heart_Chance" /> 
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
+	<patch name="addGemsToPedestalDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Max"/>
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	<patch name="rebalancePedestalCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Max"/>
+		<op id="*=" value="2"/>
+	</patch>
+	<patch name="rebalancePedestalDropRatio">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Chance"/>
+		<op id="=" value="10"/> <!-- 10% = nothing -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Coin_Chance"/>
+		<op id="=" value="65"/> <!-- 65% = coins -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Gem_Chance"/>
+		<op id="=" value="25"/> <!-- 25% = gems -->
+		
+		<!--
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='ElementStonePedestal']/PostActivate_SingleShard/@Nothing_Heart_Chance" >
+		<op id="=" value="5"/> -->
+	</patch>
+	
+	<!-- parasprites now have a 20% chance to drop gems when hitting them -->
+	<!-- hearts doesn't work :(
+	<patch name="addHeartsToParaspriteHitDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward" >
+		<op id="+attr" name="Nothing_Heart_Chance" />
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
+	<patch name="addGemsToParaspriteHitDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Max"/>
+		<op id="=" value="1"/> <!-- set to 1 -->
+	</patch>
+	<patch name="rebalanceParaspritHitCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Max"/>
+		<op id="*=" value="5"/>
+	</patch>
+	<patch name="rebalanceParaspriteHitDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Chance"/>
+		<op id="=" value="50"/> <!-- 50% = nothing -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Coin_Chance"/>
+		<op id="=" value="30"/> <!-- 30% = coins -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Gem_Chance"/>
+		<op id="=" value="20"/> <!-- 20% = gem -->
+		
+		<!--
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnHitReward/@Nothing_Heart_Chance"/>
+		<op id="=" value="5"/> -->
+	</patch>
+	
+	<!-- parasprites now have a 40% chance to drop 1-3 gems on defeat -->
+	<!-- adding hearts doesn't work :(
+	<patch name="addHeartsToParaspriteDefeatDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward"/>
+		<op id="+attr" name="Nothing_Heart_Chance" />
+		<op id="+attr" name="Nothing_Heart_Min" value="1"/>
+		<op id="+attr" name="Nothing_Heart_Max" value="1"/>
+	</patch> -->
+	<patch name="addGemsToParaspriteDefeatDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Min"/>
+		<op id="=" value="1"/>
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Max"/>
+		<op id="=" value="3"/>
+	</patch>
+	<patch name="rebalanceParaspriteDefeatCoinDrops">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Min"/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Max"/>
+		<op id="*=" value="10"/>
+	</patch>
+	<patch name="rebalanceParaspriteDefeatDropRatio">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Chance"/>
+		<op id="=" value="10"/> <!-- 10% = nothing -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Coin_Chance"/>
+		<op id="=" value="50"/> <!-- 50% = coins -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Gem_Chance"/>
+		<op id="=" value="40"/> <!-- 40% = gem -->
+		
+		<!--
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']/OnDefeatReward/@Nothing_Heart_Chance"/>
+		<op id="=" value="10"/> -->
+	</patch>
+	
+	<patch name="rebalanceDerpyDrops">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Derpy/@FindCoinReward"/>
+		<op id="=" value="1000"/>
+		
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Derpy/@GemChance"/>
+		<op id="=" value="0.5"/> <!-- set to 50% -->
+	</patch>
+	
+	<patch name="reduceExpansionHardCosts">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Expansion/Expand/@HardCost"/>
+		<op id="sqrt"/>
+		<op id="round"/>
+	</patch>
+	
+	<!-- Need to load shopdata.xml specially because the devs did something silly and didn't properly space attributes, like this attr="value"otherattr="othervalue" -->
+	<!-- Btw, this is a load action. you can use it to load a document with special options. note that it must appear before the file is referenced to actually work. -->
+	<load target="shopdata.xml" whitespacefix="true" />
+	
+	<!-- make things that cost hearts cost gems instead -->
+	<patch name="shopcostHeartsToGems">
+		<addnodes target="shopdata.xml" query="/ShopItemData/ShopItemCategory/ShopItem[@HardCurrency='3']/@HardCurrency"/>
+		<op id="=" value="2"/>
+	</patch>
+	
+	<!-- minigamecosts.xml must be dummied, because some dummy forgot to add a root element. -->
+	<load target="minigamecosts.xml" dummyroot="true" />
+	
+	<!-- reduce gem cost for 3rd tier minigames -->
+	<!-- this looks like it has no effect, but it actually does. the costs seem to be hardcoded into the display system -->
+	<patch name="reduce3rdTierMinigameCost">
+		<addnodes target="minigamecosts.xml" query="/dummy/ballbounce/teir3/@cost"/>
+		<addnodes target="minigamecosts.xml" query="/dummy/magicbook/teir3/@cost"/>
+		<addnodes target="minigamecosts.xml" query="/dummy/applepicking/teir3/@cost"/>
+		<op id="=" value="2"/>
+	</patch>
+	
+	<!-- reduce premium currency costs for lotto -->
+	<patch name="reduceLottoCosts">
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir1/@cost"/>
+		<op id="=" value="1000"/>
+		
+		<clearqueries/>
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
+		<op id="=" value="5"/>
+		
+		<clearqueries/>
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir3/@cost"/>
+		<op id="=" value="10"/>
+		
+		<clearqueries/>
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/retry/@cost"/>
+		<op id="=" value="1"/>
+	</patch>
+	
+	<!-- make tier 2 lotto use coins instead of hearts -->
+	<!-- note that the game will still show tier 2 lotto as costing hearts, but it doesn't -->
+	<!-- no, you don't have to spend 5000 hearts to play the lotto -->
+	<patch name="lottocostHeartsToCoins">
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@cost"/>
+		<op id="=" value="5000"/>
+		
+		<clearqueries/>
+		<addnodes target="minigamecosts.xml" query="/dummy/lottery/teir2/@currency"/>
+		<op id="=" value="coins"/>
+	</patch>
+	<!-- note that with this change, hearts basically have no use in game. -->
+	<!-- I was hoping to avoid this, but there seems to be no way to add hearts otherwise, -->
+	<!-- besides shop production, which would be too much, and some possible convoluted event triggers -->
+	<!-- what I really wanted to do was add them to pedestals, then split the pedestals into sets of 2 -->
+	<!-- where each set had a specialty: laughter & honesty = bits, kindness & loyalty = hearts; generosity & magic = gems -->
+	<!-- but alas, it's not possible. at least not yet. -->
+	
+	<patch name="ponySnipsSizeFix">
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@ID='Pony_Snips']/Model/@Scale" />
+		<op id="*=" value="0.7" />
+	</patch>
+	
+	<!-- increased payouts for lotto make them a slightly better investment. shaddup, it's a game. -->
+	<patch name="increaseLottoPayoutBits">
+		<addnodes target="lottogame1.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
+		<addnodes target="lottogame2.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
+		<addnodes target="lottogame3.xml" query="/loot_table/item[@objecttype='1']/@min | /loot_table/item[@objecttype='1']/@max"/>
+		<op id="*=" value="10"/>
+	</patch>
+	<patch name="increaseMaxLottoPayoutGems">
+		<addnodes target="lottogame1.xml" query="/loot_table/item[@objecttype='3']/@max"/>
+		<addnodes target="lottogame2.xml" query="/loot_table/item[@objecttype='3']/@max"/>
+		<addnodes target="lottogame3.xml" query="/loot_table/item[@objecttype='3']/@max"/>
+		<op id="*=" value="2"/>
+	</patch>
+	
+	<patch name="uniformCamera">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@PhoneMax" />
+		<op id="*=" value="2" />
+		
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@Min" />
+		<op id="/=" value="2" />
+	</patch>
+	
+	<patch name="betterZoom">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@Max" />
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@PhoneMax" />
+		<op id="*=" value="2" />
+		
+		<!-- this has a tendency to make the game freak out. protip: don't let the zoom go below 0.15
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@Min" />
+		<addnodes target="global_defines.xml" query="/Global_Defines/Camera/Zoom/@PhoneMin" />
+		<op id="*=" value="0.5" />
+		-->
+	</patch>
+	
+	<!-- reduce the rock/parasprite armies. a lot. bucking rocks. bucking parasprites. -->
+	<patch name="reduceClearableSpawns">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapBase"/>
+		<op id="/=" value="10"/>
+		
+		<clearqueries/>
+		<!-- I'm not sure what this is, but I'm pretty sure it's evil. -->
+		<!-- I wish I knew more about how the cap is calculated, because then I'd be better able to put it at a reasonable value -->
+		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ClearableCapExpMulti"/>
+		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
+		
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Clearable']/Respawn/@ChancePerHour"/>
+		<op id="/=" value="10"/>
+	</patch>
+	
+	<patch name="reduceParaspriteSpawns">
+		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapBase"/>
+		<op id="/=" value="10"/>
+		
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteCapExpMulti"/>
+		<op id="=" value="1"/> <!-- I'm not sure whether this is better as 1 or 0. -->
+		
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Trash/@ParaspriteHourlySpawnChance"/>
+		<op id="/=" value="10"/>
+	</patch>
+</xmlp>

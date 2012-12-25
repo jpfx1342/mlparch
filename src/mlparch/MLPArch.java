@@ -33,6 +33,15 @@ import java.util.regex.Pattern;
  * @author John Petska
  */
 public class MLPArch {
+	public int verbosity = 0;
+	
+	public PrintStream stdout = System.out;
+	public void printout(int l, String s)   { if (stdout != null && l <= verbosity) stdout.print  (s); }
+	public void printlnout(int l, String s) { if (stdout != null && l <= verbosity) stdout.println(s); }
+	public PrintStream stderr = System.err;
+	public void printerr(int l, String s)   { if (stderr != null && l <= verbosity) stderr.print  (s); }
+	public void printlnerr(int l, String s) { if (stderr != null && l <= verbosity) stderr.println(s); }
+	
 	public static class MLPFileEntry {
 		public long startOffset;
 		public long endOffset;
@@ -74,23 +83,17 @@ public class MLPArch {
 		try {
 			indexCharset = Charset.forName("UTF-8");
 		} catch (Exception ex1) {
-			printlnerr("Couldn't locate index charset \"UTF-8\": "+ex1.getLocalizedMessage());
+			printlnerr(0, "Couldn't locate index charset \"UTF-8\": "+ex1.getLocalizedMessage());
 			try {
 				indexCharset = Charset.forName("UTF8");
 			} catch (Exception ex2) {
-				printlnerr("Couldn't locate index charset \"UTF8\": "+ex2.getLocalizedMessage());
+				printlnerr(0, "Couldn't locate index charset \"UTF8\": "+ex2.getLocalizedMessage());
 				indexCharset = Charset.defaultCharset();
-				printlnerr("Falling back on: "+indexCharset.name());
+				printlnerr(0, "Falling back on: "+indexCharset.name());
 			}
 		}
 	}
 	public boolean readonly = true;
-	public PrintStream stdout = System.out;
-	public void printout(String s)   { if (stdout != null) stdout.print  (s); }
-	public void printlnout(String s) { if (stdout != null) stdout.println(s); }
-	public PrintStream stderr = System.err;
-	public void printerr(String s)   { if (stderr != null) stderr.print  (s); }
-	public void printlnerr(String s) { if (stderr != null) stderr.println(s); }
 	
 	/** This option forces the header to be a certain length. If this is above
 	 * 0, the header is always considered to be this long. This means when reading
@@ -108,7 +111,8 @@ public class MLPArch {
 	public boolean compatFullPaths = false;
 	
 	/** This constructor simply sets the archive file. **/
-	public MLPArch(File archFile) {
+	public MLPArch(int verbosity, File archFile) {
+		this.verbosity = verbosity;
 		this.archFile = archFile;
 	}
 	
@@ -325,7 +329,7 @@ public class MLPArch {
 		
 		File destFile = new File(destFolder, entry.path);
 		if (!compatFullPaths && !isAncestorOf(destFile, destFolder)) {
-			printlnerr("Warning: \""+destFile.getPath()+"\" is not an ancestor of \""+destFolder+"\"! Skipping.");
+			printlnerr(1, "Warning: \""+destFile.getPath()+"\" is not an ancestor of \""+destFolder+"\"! Skipping.");
 			return;
 		}
 		destFile.getParentFile().mkdirs();
@@ -349,10 +353,12 @@ public class MLPArch {
 		NumberFormat format = NumberFormat.getPercentInstance(); format.setMinimumFractionDigits(1); format.setMaximumFractionDigits(1);
 		for (int i = 0; i < index.size(); i++) {
 			MLPFileEntry entry = index.get(i);
-			printout("Extracting "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			printout(1, "Unpacking "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 				unpackFile(entry, destFolder);
-			printlnout("done.");
+			if (verbosity >= 1) printlnout(1, "done.");
+			else printout(0, ".");
 		}
+		if (verbosity <= 0) printlnout(0, "");
 	}
 	public void writeHeaderToArchive() throws FileNotFoundException, IOException {
 		prepareWrite();
@@ -397,7 +403,7 @@ public class MLPArch {
 			if (pat != null && !pat.matcher(entry.path).matches())
 				continue; //skipping
 			//if (i > 10 && i < index.size()-10) { pos+=entry.size(); archWrite.seek(pos); continue; }
-			printout("Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
+			printout(1, "Packing "+(i+1)+"/"+index.size()+" ("+format.format((float)(i+1)/index.size())+"): \""+entry.path+"\" ("+entry.size()+" bytes)...");
 			
 			File file = new File(packFolder, entry.path);
 			if (!file.exists() || file.isDirectory())
@@ -418,8 +424,10 @@ public class MLPArch {
 				rpos += read;
 			}
 			pos += entry.size();
-			printlnout("done.");
+			if (verbosity >= 1) printlnout(1, "done.");
+			else printout(0, ".");
 		}
+		if (verbosity <= 0) printlnout(0, "");
 		if (pos != indexOffset)
 			throw new IllegalStateException("End of write doesn't meet index position!");
 	}

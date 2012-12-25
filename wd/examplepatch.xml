@@ -1,0 +1,141 @@
+<xmlp>
+	<!-- an XMLPatch file consists of a series of actions, one after another -->
+	
+	<!-- BASIC PATCHING -->
+	<!-- the most common and useful action is the patch action, which performs various operations on xml documents -->
+	<patch name="printPonies">
+		<!-- parts of a patch are executed in order -->
+		
+		<!-- add a set of nodes to this patch. remember that a 'node' may be either an attribute or an element -->
+		<!-- this is the XPath format, so you can read more here: http://www.w3schools.com/xpath/default.asp -->
+		<!-- this query says (it may help to read the query from right to left): -->
+		<!-- get every 'ID' Attribute which is attached to every GameObject Element (where it's category equals 'pony') which is attached to the root GameObjects Element -->
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony']/@ID"/>
+		
+		<!-- ops are applied to all nodes collected so far -->
+		<!-- this one prints out the name and value of all nodes given to it -->
+		<op id="print"/>
+	</patch>
+	
+	<!-- ADVANCED LOADING -->
+	<!-- another useful action is the load action, which allows you to load documents in non-standard ways -->
+	<!-- it is mostly used for "fixing" broken xml files so they can be loaded by XMLPatch -->
+	<!-- minigamecosts.xml must be dummied, because some dummy forgot to add a root element. -->
+	<!-- note that this means the document will have a fake root, named "dummy". you need to include this in your queries -->
+	<!-- don't worry, it'll be stripped off before we save -->
+	<load target="minigamecosts.xml" dummyroot="true" />
+	<!-- note that documents will be implicitly loaded the first time they are referenced in a query -->
+	<!-- so make sure your load action appears before then, or else it will have no effect -->
+	
+	<!-- MORE OPS AND NODES -->
+	<patch> <!-- the patch name may also be empty or non-existent. the patch will be treated as anonymous, but this isn't recommended, because we might use the name in the future! -->
+		<!-- note the presence of the dummy root element in these queries, because of the load action above -->
+		<!-- also note that the query list is reset with each new patch, so all the queries from the last patch have no effect on this one. -->
+		<addnodes target="minigamecosts.xml" query="/dummy/ballbounce/teir3/@cost"/>
+		<!-- queries are additive... -->
+		<addnodes target="minigamecosts.xml" query="/dummy/magicbook/teir3/@cost"/>
+		<!-- so the node list contains 2 queries worth of nodes at this point -->
+		<!-- this op simply sets each node's value to it's value -->
+		<op id="=" value="2"/>
+		
+		<!-- you can reset the query list as well -->
+		<clearqueries/>
+		<!-- the first two queries added in this patch are now gone -->
+		<!-- but we can always add more! -->
+		<addnodes target="minigamecosts.xml" query="/dummy/applepicking/teir3/@cost"/>
+		<!-- this op multiplies each node's value by it's value. note that if you try using this on non-numeric nodes, XMLPatch will yell at you -->
+		<op id="*=" value="2"/>
+		<!-- this op works like "*=", except that it divides instead of multiplies -->
+		<!-- as mentioned, parts of a patch are executed in order, so you can apply multiple ops to a set of nodes -->
+		<op id="/=" value="3"/>
+		<!-- add op... -->
+		<op id="+=" value="7"/>
+		<!-- subtract op... -->
+		<op id="-=" value="4"/>
+		<!-- this op rounds to the nearest integer. it's also got some cooler powers we'll discuss later -->
+		<!-- it also has brothers named "ceil" and "floor", which work exactly the same, except that they round up and down the nearest integer, respectively -->
+		<op id="round"/>
+	</patch>
+	
+	<!-- ADVANCED SELECTION/QUERIES -->
+	<patch name="advancedSelection">
+		<!-- get all the houses -->
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Pony_House']/@ID"/>
+		<!-- remember how we said that multiple queries are additive? well they can be subtractive as well. -->
+		<!-- trixie's being a jerk again. lets remove her from our node set -->
+		<remnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@ID='House_Trixie']/@ID"/>
+		<!-- now the node set is all the buildings in the game, except for trixie's -->
+		
+		<!-- not that it's all that useful, but a patch doesn't actually have to have an op in it. -->
+		<!-- look ma, no ops! -->
+	</patch>
+	
+	<!-- ADVANCED ROUNDING -->
+	<!-- now we're going to do something useful... -->
+	<!-- this patch is almost straight from the default patch you can get with XMLPatch -->
+	<patch name="reduceProductionTimes">
+		<!-- we want more money, so our goal is to reduce all the production times in the game -->
+		<!-- first, we need to get ahold of all the production times on all the buildings in game -->
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Consumable']/Production/@Time"/>
+		<!-- simple enough. now we're going to reduce them to their square roots, to get rid of that nasty exponential nature the game sorta has -->
+		<op id="sqrt"/>
+		
+		<!-- now if we didn't do anything else, all those new numbers would have lots of decimal places on the end -->
+		<!-- you try to leave those decimal places on with integer values like cash, and the game's gonna get mighty confused when it has to pay you 1.414 bits -->
+		<!-- not to mention, well rounded numbers will just look better -->
+		<!-- lets reduce it down so that there's a maximum of 1 decimal place -->
+		<op id="round" sig="1"/>
+		<!-- the round family (round, floor and ceil) support other sig values as well -->
+		<!-- sig = 0 will result in exactly 0 decimal places, and is the default -->
+		<!-- you can also use negative numbers! sig = -1 would round to the nearest ten! (not tenth) -->
+		
+		<!-- if you want to do some fancy rounding, you can use the direct flag -->
+		<!-- this flag lets you pick the rounding muliplier directly, instead of having it calculated for you -->
+		<!-- this particular variant will round to the nearest 2. that's right, you can round to the 2's place -->
+		<!-- an easy way to determine your rounding factor is to take 1, and divide it by the number you want to round to -->
+		<!-- to round to 5: 1 / 5 = 0.2 -->
+		<op id="ceil" direct="true" sig="0.5"/>
+		
+		<!-- note that just because of how XMLPatch and floating point numbers work, -->
+		<!-- there might be some decimal places left that you didn't want -->
+		<!-- rounding with sig="0" will ensure that all decimal places are truly removed -->
+		<!-- the end result will always be an integer -->
+		<op id="round"/>
+	</patch>
+	
+	<!-- TREE MANIPULATION -->
+	<patch name="treeManipulation">
+		<!-- the day may come when you decide you want to add or remove something -->
+		<!-- so far, we've only covered modifying existing nodes. now we'll learn how to make and remove them -->
+		
+		<!-- let's add our signature to the global defines! (note that I don't actually condone this action, it's just an example -->
+		<!-- to add nodes, you first need to select the nodes you want to add them to -->
+		<!-- actually, we really just need the root node -->
+		<addnodes target="global_defines.xml" query="/Global_Defines"/>
+		
+		<!-- now let's add a new element! -->
+		<op id="+elem" name="Coolness"/>
+		
+		<!-- yay! now we have a Coolness element on every node we selected! (which was only one node in this case) -->
+		<!-- now we need to select it, so we can add to it -->
+		<clearqueries/>
+		<addnodes target="global_defines.xml" query="/Global_Defines/Coolness"/>
+		
+		<!-- you know where this is going... -->
+		<op id="+attr" name="factor" value="1.20"/> <!-- 20%, yo. -->
+		<!-- viola, we've added an attribute to our new element, which is referenceable later on in the patch file like any other -->
+		
+		<!-- note that patches, and even ops, need not only operate on a single file -->
+		<!-- ops don't really care where you get your nodes -->
+		<clearqueries/>
+		<addnodes target="gameobjectdata.xml" query="/GameObjects/GameObject[@Category='Parasprite']"/>
+		
+		<!-- now we're going to REMOVE ALL THE PARASPRITES -->
+		<!-- okay, as cool as this sounds, it might break the game, so don't actually do this. -->
+		<!-- but if you did want to, this is how you would do it -->
+		<op id="remove"/>
+		<!-- and now all our troubles are gone. at least until the game explodes -->
+		
+		<!-- in the future, we'll likely allow you to insert actual snippets of xml into documents, but for now we don't -->
+	</patch>
+</xmlp>
