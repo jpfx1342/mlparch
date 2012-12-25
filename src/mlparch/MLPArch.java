@@ -54,6 +54,9 @@ public class MLPArch {
 		public String toString() {
 			return "\""+path+"\" ("+startOffset+" - "+endOffset+") {"+size()+"} ["+magic0+", "+magic1+"]";
 		}
+		public String toCSV() {
+			return path+", "+startOffset+", "+endOffset+", "+size()+", "+magic0+", "+magic1;
+		}
 	}
 	
 	/** The starting index of the file index. **/
