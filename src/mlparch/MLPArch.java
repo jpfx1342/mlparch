@@ -109,6 +109,8 @@ public class MLPArch {
 	 * the destination directory. Only set this to true if you know what you're
 	 * doing, as a malicious archive could unpack files anywhere on your system. **/
 	public boolean compatFullPaths = false;
+	//path separator to use when creating archives
+	public char compatPathSeparator = '/';
 	
 	/** This constructor simply sets the archive file. **/
 	public MLPArch(int verbosity, File archFile) {
@@ -285,34 +287,34 @@ public class MLPArch {
 			//we reached the end of file. probably.
 		}
 	}
-	private void traverseAndAddToArray(File folder, ArrayList<File> files) {
-		File[] children = folder.listFiles();
-		Arrays.sort(children, new Comparator<File>() {
-			@Override public int compare(File f1, File f2) {
-				return f1.getName().compareTo(f2.getName());
-			}
-		});
+	private void traverseAndAddToArray(File folder, ArrayList<String> files) { traverseAndAddToArray(folder, "", files); }
+	private void traverseAndAddToArray(File folder, String prefix, ArrayList<String> files) {
+		String[] children = folder.list();
+		Arrays.sort(children); //natural sort is fine
 		for (int i = 0; i < children.length; i++) {
-			if (children[i].isDirectory()) {
-				traverseAndAddToArray(children[i], files);
-			} else if (children[i].isFile()) {
-				files.add(children[i]);
+			File f = new File(folder, children[i]);
+			if (f.isDirectory()) {
+				traverseAndAddToArray(f, prefix+compatPathSeparator+children[i], files);
+			} else if (f.isFile()) {
+				files.add(prefix+compatPathSeparator+children[i]);
 			}
 		}
 	}
 	public void loadIndexFromFolder(File packFolder) {
 		//build the index from that folder
-		ArrayList<File> files = new ArrayList<File>(8192);
+		ArrayList<String> files = new ArrayList<String>(8192);
 		traverseAndAddToArray(packFolder, files);
 		
 		index = new ArrayList<MLPFileEntry>();
 		long pos = compatFixedHeaderSize <= 0 ? 32 : compatFixedHeaderSize;
 		for (int i = 0; i < files.size(); i++) {
+			String path = files.get(i);
+			File file = new File(packFolder, path);
+			
 			long start = pos;
-			long size = files.get(i).length();
+			long size = file.length();
 			pos += size;
 			long end = pos;
-			String path = files.get(i).getPath();
 			path = path.replace('\\', '/');
 			path = path.substring(path.indexOf('/')+1);
 			MLPFileEntry entry = new MLPFileEntry(start, end, size/32, start, path);
