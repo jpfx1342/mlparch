@@ -77,7 +77,7 @@
         <copy file="LICENSE.md" todir="wd"/>
         <zip destfile="${application.title}-release.zip"
             basedir="wd"
-			excludes="**/*.log, **/.git/**, **/*.obb, extract/, out/"
+            includes="*.jar, *.md, *.xml"
         />
     </target>
 </project>
