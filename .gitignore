@@ -15,7 +15,9 @@ Phlogiston.jar
 
 #Ignore game data and program output
 *.obb
+*.ark
 *.obbx
+*.arkx
 /wd/extract*
 *.GloftPOHM
 /wd/out/
@@ -23,4 +25,5 @@ Phlogiston.jar
 /wd/*.jar
 /wd/*.csv
 /wd/*.ods
+/wd/*.txt
 /*release.zip
