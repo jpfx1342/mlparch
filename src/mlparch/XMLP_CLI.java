@@ -6,6 +6,7 @@ package mlparch;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.PrintStream;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -39,16 +40,24 @@ public class XMLP_CLI {
 		printlnout(0, "    -p - patch mode (default)");
 		printlnout(0, "    -q <arg> - XPath query mode");
 		printlnout(0, "    -t <arg> - set target file for patch or query (default \"xmlpatch.xml\")");
-		printlnout(0, "    -r <arg> - set root directory for patch operation (default \"extract\")");
+		printlnout(0, "    -r <arg> - set root directory for patch operation (default auto-select \".GloftPOHM\")");
 		printlnout(0, "    -o <arg> - write updated files to a different folder for patch operation (default=rootDir)");
 		printlnout(0, "    -f - activate fake mode (don't actually write files)");
 		printlnout(0, "    -v - increase verbosity (may be repeated)");
 		printlnout(0, "    -? - show this help");
 		printlnout(0, "    --help - show this help");
 	}
+	public static void errFatal(String error, int code) {
+		System.err.print("Fatal Error: "); System.err.println(error);
+		System.err.println("Cannot continue.");
+		System.exit(code);
+	}
+	public static final int ERR_AUTOSELECT = 253;
+	public static final int ERR_ARGUMENT = 254;
+	
 	public static void main(String[] args) throws Exception {
 		String targName = "xmlpatch.xml";
-		String pdirName = "extract";
+		String pdirName = null;
 		String outdName = null;
 		String query = null;
 		int mode = 0; //0 == patch, 1 == query
@@ -64,7 +73,7 @@ public class XMLP_CLI {
 				if (arg0.equals("help")) {
 					showHelp(); System.exit(0);
 				} else {
-					throw new IllegalArgumentException("Unrecognized long option: '"+arg0+"'.");
+					errFatal("Unrecognized long option: '"+arg0+"'.", ERR_ARGUMENT);
 				}
 			} else if (arg0.charAt(0) == '-') {
 				//short option
@@ -84,45 +93,66 @@ public class XMLP_CLI {
 							break;
 						case 'q':
 							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'q' short option must be last in a stack!");
+								errFatal("'q' short option must be last in a stack!", ERR_ARGUMENT);
 							if (++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'q'!");
+								errFatal("Expected another bare argument after 'q'!", ERR_ARGUMENT);
 							mode = 1;
 							query = args[i];
 							break;
 						case 't':
 							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'t' short option must be last in a stack!");
+								errFatal("'t' short option must be last in a stack!", ERR_ARGUMENT);
 							if (++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 't'!");
+								errFatal("Expected another bare argument after 't'!", ERR_ARGUMENT);
 							targName = args[i];
 							break;
 						case 'r':
 							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'f' short option must be last in a stack!");
+								errFatal("'f' short option must be last in a stack!", ERR_ARGUMENT);
 							if (++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
+								errFatal("Expected another bare argument after 'f'!", ERR_ARGUMENT);
 							pdirName = args[i];
 							break;
 						case 'o':
 							if (j!=arg0.length()-1)
-								throw new IllegalArgumentException("'o' short option must be last in a stack!");
+								errFatal("'o' short option must be last in a stack!", ERR_ARGUMENT);
 							if (++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'o'!");
+								errFatal("Expected another bare argument after 'o'!", ERR_ARGUMENT);
 							outdName = args[i];
 							break;
 						case 'f':
 							fakeMode = true;
 							break;
 						default:
-							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
+							errFatal("Unrecognized short option: '"+opt+"'.", ERR_ARGUMENT);
 					}
 				}
 			} else {
 				//bare argument
-				throw new IllegalArgumentException("Unrecognized bare argument: '"+arg0+"'.");
+				errFatal("Unrecognized bare argument: '"+arg0+"'.", ERR_ARGUMENT);
 			}
 		}
+		if (pdirName == null) {
+			System.out.println("Root target directory not specified, auto-selecting...");
+			
+			File local = new File(".");
+			if (!local.isDirectory())
+				throw new IllegalStateException("Current directory isn't a directory?"); //huh. current directory isn't a directory
+			File[] files = local.listFiles(new FilenameFilter() {
+				@Override public boolean accept(File dir, String name) {
+					return name.endsWith(".GloftPOHM");
+				}
+			});
+			if (files == null || files.length == 0)
+				errFatal("Cannot auto-select root, no possible directories in current directory (*.GloftPOHM)", ERR_AUTOSELECT);
+			if (files.length > 1)
+				errFatal("Cannot auto-select root, too many possible directories in current directory (*.GloftPOHM) (found "+files.length+")", ERR_AUTOSELECT);
+
+			pdirName = files[0].getPath();
+			
+			System.out.println("Auto-selected root: "+pdirName);
+		}
+		
 		if (outdName == null) outdName = pdirName;
 		File targFile = new File(targName);
 		File pdirFile = new File(pdirName);
