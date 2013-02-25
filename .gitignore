@@ -18,6 +18,7 @@ Phlogiston.jar
 *.ark
 *.obbx
 *.arkx
+*.new
 /wd/extract*
 *.GloftPOHM
 /wd/out/
