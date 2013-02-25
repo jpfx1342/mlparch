@@ -5,6 +5,7 @@
 package mlparch;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.NumberFormat;
@@ -42,10 +43,19 @@ public class MLPA_CLI {
 		printlnout(0, "    -? - show this help");
 		printlnout(0, "    --help - show this help");
 	}
+	public static void errFatal(String error, int code) {
+		System.err.print("Fatal Error: "); System.err.println(error);
+		System.err.println("Cannot continue.");
+		System.exit(code);
+	}
+	public static final int ERR_AUTOSELECT = 253;
+	public static final int ERR_ARGUMENT = 254;
+	
 	public static void main(String[] args) throws Exception {
-		String archName = "main.1050.com.gameloft.android.ANMP.GloftPOHM.obb";
-		String tmplName = archName;
-		String packName = "extract";
+		//Where the archive is (going to be)
+		String archName = null;
+		//Where the extracted files are (going to be)
+		String packName = null;
 		int mode = 0; //0 == unpack, 1 == pack, 2 == list
 		int matchMode = 0; //0 == all, 1 == single, 2 == regex, 3 == wildcard
 		String matchPat = null;
@@ -64,7 +74,7 @@ public class MLPA_CLI {
 					mode = 2; //list
 					listFmt = 1;
 				} else {
-					throw new IllegalArgumentException("Unrecognized long option: '"+arg0+"'.");
+					errFatal("Unrecognized long option: '"+arg0+"'.", ERR_ARGUMENT);
 				}
 			} else if (arg0.charAt(0) == '-') {
 				//short option
@@ -90,41 +100,62 @@ public class MLPA_CLI {
 							break;
 						case 'a':
 							if (j!=arg0.length()-1 || ++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'a'!");
+								errFatal("Expected another bare argument after 'a'!", ERR_ARGUMENT);
 							archName = args[i];
 							break;
 						case 'f':
 							if (j!=arg0.length()-1 || ++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'f'!");
+								errFatal("Expected another bare argument after 'f'!", ERR_ARGUMENT);
 							packName = args[i];
 							break;
 						case 's':
 							if (j!=arg0.length()-1 || ++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 's'!");
+								errFatal("Expected another bare argument after 's'!", ERR_ARGUMENT);
 							matchMode = 1;
 							matchPat = args[i];
 							break;
 						case 'r':
 							if (j!=arg0.length()-1 || ++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'r'!");
+								errFatal("Expected another bare argument after 'r'!", ERR_ARGUMENT);
 							matchMode = 2;
 							matchPat = args[i];
 							break;
 						case 'm':
 							if (j!=arg0.length()-1 || ++i >= args.length)
-								throw new IllegalArgumentException("Expected another bare argument after 'm'!");
+								errFatal("Expected another bare argument after 'm'!", ERR_ARGUMENT);
 							System.err.println("Attempting to use wildcard matching: This doesn't work very well, have fun!");
 							matchMode = 3;
 							matchPat = args[i];
 							break;
 						default:
-							throw new IllegalArgumentException("Unrecognized short option: '"+opt+"'.");
+							errFatal("Unrecognized short option: '"+opt+"'.", ERR_ARGUMENT);
 					}
 				}
 			} else {
 				//bare argument
-				throw new IllegalArgumentException("Unrecognized bare argument: '"+arg0+"'.");
+				errFatal("Unrecognized bare argument: '"+arg0+"'.", ERR_ARGUMENT);
 			}
+		}
+		
+		if (archName == null) {
+			System.out.println("Archive file not specified, auto-selecting...");
+			File local = new File(System.getProperty("user.dir"));
+			if (!local.isDirectory())
+				throw new IllegalStateException("Current directory isn't a directory?"); //huh. current directory isn't a directory
+			File[] files = local.listFiles(new FilenameFilter() {
+				@Override public boolean accept(File dir, String name) {
+					return name.endsWith(".obb");
+				}
+			});
+			if (files == null || files.length == 0)
+				errFatal("Cannot auto-select archive, no archives in current directory (*.obb)", ERR_AUTOSELECT);
+			if (files.length > 1)
+				errFatal("Cannot auto-select archive, too many archives in current directory (*.obb) (found "+files.length+")", ERR_AUTOSELECT);
+			
+			archName = files[0].getPath();
+			if (!archName.endsWith(".obb"))
+				throw new IllegalStateException("Auto-selection returned a path that doesn't end in \".obb\"?");
+			packName = archName.substring(0, archName.length()-4);
 		}
 		
 		File archFile = new File(archName);
