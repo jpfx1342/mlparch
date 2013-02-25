@@ -34,8 +34,8 @@ public class MLPA_CLI {
 		printlnout(0, "    -p - pack mode");
 		printlnout(0, "    -l - list mode ");
 		printlnout(0, "    --csv - list entries as csv (also supresses most output)");
-		printlnout(0, "    -a <arg> - specify archive location (default \"main.1050.com.gameloft.android.ANMP.GloftPOHM.obb\")");
-		printlnout(0, "    -f <arg> - specify pack/unpack location (default \"extract\")");
+		printlnout(0, "    -a <arg> - specify archive location (default auto-selects \"*.obb\")");
+		printlnout(0, "    -f <arg> - specify pack/unpack location (default <archive path>-\".obb\")");
 		printlnout(0, "    -s <arg> - pack/unpack only a single file");
 		printlnout(0, "    -r <arg> - pack/unpack only files matching this regex");
 		//printlnout(0, "    -m <arg> - pack/unpack only files matching this wildcard pattern (*, ?)");
@@ -139,23 +139,30 @@ public class MLPA_CLI {
 		
 		if (archName == null) {
 			System.out.println("Archive file not specified, auto-selecting...");
-			File local = new File(System.getProperty("user.dir"));
-			if (!local.isDirectory())
-				throw new IllegalStateException("Current directory isn't a directory?"); //huh. current directory isn't a directory
-			File[] files = local.listFiles(new FilenameFilter() {
-				@Override public boolean accept(File dir, String name) {
-					return name.endsWith(".obb");
-				}
-			});
-			if (files == null || files.length == 0)
-				errFatal("Cannot auto-select archive, no archives in current directory (*.obb)", ERR_AUTOSELECT);
-			if (files.length > 1)
-				errFatal("Cannot auto-select archive, too many archives in current directory (*.obb) (found "+files.length+")", ERR_AUTOSELECT);
-			
-			archName = files[0].getPath();
-			if (!archName.endsWith(".obb"))
-				throw new IllegalStateException("Auto-selection returned a path that doesn't end in \".obb\"?");
-			packName = archName.substring(0, archName.length()-4);
+			if (packName == null) {
+				File local = new File(System.getProperty("user.dir"));
+				if (!local.isDirectory())
+					throw new IllegalStateException("Current directory isn't a directory?"); //huh. current directory isn't a directory
+				File[] files = local.listFiles(new FilenameFilter() {
+					@Override public boolean accept(File dir, String name) {
+						return name.endsWith(".obb");
+					}
+				});
+				if (files == null || files.length == 0)
+					errFatal("Cannot auto-select archive, no archives in current directory (*.obb)", ERR_AUTOSELECT);
+				if (files.length > 1)
+					errFatal("Cannot auto-select archive, too many archives in current directory (*.obb) (found "+files.length+")", ERR_AUTOSELECT);
+
+				archName = files[0].getPath();
+			} else {
+				archName = packName+".obb";
+			}
+		}
+		if (packName == null) {
+			int extp = archName.lastIndexOf('.');
+			if (extp < 0)
+				errFatal("Cannot auto-select output directory, archive doesn't have extension to remove", ERR_AUTOSELECT);
+			packName = archName.substring(0, extp);
 		}
 		
 		File archFile = new File(archName);
