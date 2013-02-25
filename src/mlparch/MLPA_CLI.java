@@ -137,7 +137,10 @@ public class MLPA_CLI {
 			}
 		}
 		
-		if (archName == null) {
+		boolean autoArch = (archName == null);
+		boolean autoPack = (packName == null);
+		
+		if (autoArch) {
 			System.out.println("Archive file not specified, auto-selecting...");
 			if (packName == null) {
 				File local = new File(".");
@@ -160,7 +163,7 @@ public class MLPA_CLI {
 			
 			System.out.println("Auto-selected archive: "+archName);
 		}
-		if (packName == null) {
+		if (autoPack) {
 			System.out.println("Pack directory not specified, auto-selecting...");
 			
 			int extp = archName.lastIndexOf('.');
@@ -170,6 +173,11 @@ public class MLPA_CLI {
 			
 			System.out.println("Auto-selected pack directory: "+packName);
 		}
+		if (autoArch && mode == 1) {
+			//create unique output name
+			archName = archName.concat(".new");
+		}
+			
 		
 		File archFile = new File(archName);
 		File packFile = new File(packName);
