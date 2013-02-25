@@ -140,7 +140,7 @@ public class MLPA_CLI {
 		if (archName == null) {
 			System.out.println("Archive file not specified, auto-selecting...");
 			if (packName == null) {
-				File local = new File(System.getProperty("user.dir"));
+				File local = new File(".");
 				if (!local.isDirectory())
 					throw new IllegalStateException("Current directory isn't a directory?"); //huh. current directory isn't a directory
 				File[] files = local.listFiles(new FilenameFilter() {
@@ -157,12 +157,18 @@ public class MLPA_CLI {
 			} else {
 				archName = packName+".obb";
 			}
+			
+			System.out.println("Auto-selected archive: "+archName);
 		}
 		if (packName == null) {
+			System.out.println("Pack directory not specified, auto-selecting...");
+			
 			int extp = archName.lastIndexOf('.');
 			if (extp < 0)
 				errFatal("Cannot auto-select output directory, archive doesn't have extension to remove", ERR_AUTOSELECT);
 			packName = archName.substring(0, extp);
+			
+			System.out.println("Auto-selected pack directory: "+packName);
 		}
 		
 		File archFile = new File(archName);
